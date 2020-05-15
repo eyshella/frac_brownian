@@ -1,0 +1,62 @@
+{
+  "name": "frac_brownian",
+  "version": "1.0.0",
+  "description": "Small application for modelling fractional brownian motion in a different ways.",
+  "main": "./main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "webpack": "webpack --config ./webpack.dev.js",
+    "webpack-prod": "webpack --config ./webpack.prod.js",
+    "webpack-watch": "webpack -w --config ./webpack.dev.js",
+    "start": "npm run webpack && electron ./build/main.js",
+    "start-electron": "electron ./build/main.js",
+    "build": "npm run webpack && electron-builder",
+    "build-prod": "npm run webpack-prod && electron-builder"
+  },
+  "author": "Ragozin Roman Alekseevich",
+  "private": true,
+  "license": "SEE LICENSE IN license.txt",
+  "build": {
+    "appId": "com.eyshella.frac_brownian",
+    "files": [
+      {
+        "from": "./build/",
+        "to": "./",
+        "filter": "**/*"
+      },
+      "package.json"
+    ],
+    "win": {
+      "icon": "./build/assets/icon.png"
+    },
+    "directories": {
+      "output": "dist"
+    }
+  },
+  "devDependencies": {
+    "@material-ui/core": "^4.9.14",
+    "@types/react": "^16.9.34",
+    "@types/react-dom": "^16.9.6",
+    "@types/react-modal": "^3.10.5",
+    "@types/react-router-dom": "^5.1.4",
+    "@types/styled-components": "^5.1.0",
+    "copy-webpack-plugin": "^5.1.1",
+    "css-loader": "^3.5.3",
+    "electron": "8.3.0",
+    "electron-builder": "^22.5.1",
+    "html-webpack-plugin": "^4.2.0",
+    "module-replace-webpack-plugin": "0.0.12",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-modal": "^3.11.2",
+    "react-router-dom": "^5.1.2",
+    "style-loader": "^1.2.1",
+    "styled-components": "^5.1.0",
+    "ts-loader": "^7.0.1",
+    "typescript": "^3.8.3",
+    "uglifyjs-webpack-plugin": "^1.3.0",
+    "url-loader": "^4.1.0",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
+  }
+}
