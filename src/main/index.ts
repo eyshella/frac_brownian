@@ -3,8 +3,10 @@ import { Environment } from '../environments/environment';
 
 function createWindow() {
   let win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    minWidth: 1200,
+    minHeight: 800,
+    width: 1200,
+    height: 800,
     webPreferences: {
       nodeIntegration: true
     },
