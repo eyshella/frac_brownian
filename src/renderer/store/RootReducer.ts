@@ -7,7 +7,10 @@ import { ActionTypes } from "./Actions";
 export interface RootState {
   firstAlgorithmParams: FirstAlgorithmParams;
   firstAlgorithmResult: Array<Point>;
-  firstAlgorithmLoading: boolean
+  firstAlgorithmLoading: boolean;
+  isInfoModalOpen: boolean;
+  infoModalTitle: string;
+  infoModalDescription: string;
 }
 
 const defaultState: RootState = {
@@ -19,7 +22,10 @@ const defaultState: RootState = {
     timeoutSeconds: '600'
   },
   firstAlgorithmResult: [],
-  firstAlgorithmLoading: false
+  firstAlgorithmLoading: false,
+  isInfoModalOpen: false,
+  infoModalTitle: '',
+  infoModalDescription: '',
 }
 
 export const RootReducer: Reducer<RootState, ActionWithPayload> = (state: RootState | undefined, action: ActionWithPayload) => {
@@ -42,6 +48,20 @@ export const RootReducer: Reducer<RootState, ActionWithPayload> = (state: RootSt
       return {
         ...state,
         firstAlgorithmLoading: action.payload
+      }
+    case ActionTypes.OpenInfoModal:
+      return {
+        ...state,
+        isInfoModalOpen: true,
+        infoModalTitle: action.payload.title,
+        infoModalDescription: action.payload.description
+      }
+    case ActionTypes.CloseInfoModal:
+      return {
+        ...state,
+        isInfoModalOpen: false,
+        infoModalTitle: '',
+        infoModalDescription: ''
       }
     default:
       return state

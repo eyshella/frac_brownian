@@ -6,6 +6,7 @@ import { Fonts } from '../utils';
 import { AboutScreen } from './about/AboutScreen';
 import { FirstAlgorithmScreen } from './first-algorithm/FirstAlgorithmScreen';
 import { SecondAlgorithmScreen } from './second-algorithm/SecondAlgorithmScreen';
+import { InfoModal } from './InfoModal'
 
 const Wrapper = styled.div`
   display:flex;
@@ -79,16 +80,17 @@ export class RootScreen extends React.Component<any, State> {
               <Tab label="О приложении" />
             </StyledTabs>
           </Box>
-          <ContentWrapper hidden={this.state.openedTab!==0}>
+          <ContentWrapper hidden={this.state.openedTab !== 0}>
             <FirstAlgorithmScreen></FirstAlgorithmScreen>
           </ContentWrapper>
-          <ContentWrapper hidden={this.state.openedTab!==1}>
+          <ContentWrapper hidden={this.state.openedTab !== 1}>
             <SecondAlgorithmScreen></SecondAlgorithmScreen>
           </ContentWrapper>
-          <ContentWrapper hidden={this.state.openedTab!==2}>
+          <ContentWrapper hidden={this.state.openedTab !== 2}>
             <AboutScreen></AboutScreen>
           </ContentWrapper>
         </Wrapper>
+        <InfoModal />
       </ThemeProvider>
     );
   }

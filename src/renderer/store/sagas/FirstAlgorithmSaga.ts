@@ -2,7 +2,7 @@ import { ipcRenderer } from 'electron';
 import { call, delay, put, select, takeLatest } from 'redux-saga/effects';
 
 import { ActionWithPayload, FirstAlgorithmParams, Point } from '../../models';
-import { ActionTypes, SetFirstAlgorithmLoading, SetFirstAlgorithmResult, StopFirstAlgorithm } from '../Actions';
+import { ActionTypes, SetFirstAlgorithmLoading, SetFirstAlgorithmResult, StopFirstAlgorithm, OpenInfoModal } from '../Actions';
 import { RootState } from '../RootReducer';
 import { firstAlgorithmParamsSelector } from '../Selectors';
 import { IpcEvents } from '../../../models';
@@ -11,6 +11,10 @@ import { IpcEvents } from '../../../models';
 function* startStopCalculation(action: ActionWithPayload) {
   if (action.type === ActionTypes.StopFirstAlgorithm) {
     yield put(SetFirstAlgorithmLoading(false));
+    yield put(OpenInfoModal({
+      title:'Операция была прервана!',
+      description:'Попробуйте установить большее время выполнения.'
+    }))
     ipcRenderer.send(IpcEvents.StopFirstAlgorithm);
     return;
   }

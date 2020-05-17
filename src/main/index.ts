@@ -62,8 +62,9 @@ function createWindow() {
   win.loadFile('./index.html');
 }
 
+const firstAlgorithmController = new FirstAlgorithmController();
+
 app.on('ready', async function () {
   createWindow();
-  const firstAlgorithmController = new FirstAlgorithmController();
   firstAlgorithmController.Start();
 });

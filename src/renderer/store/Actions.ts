@@ -6,8 +6,24 @@ export enum ActionTypes {
   SetFirstAlgorithmResult = 'SetFirstAlgorithmResult',
   StartFirstAlgorithm = 'StartFirstAlgorithm',
   StopFirstAlgorithm = 'StopFirstAlgorithm',
-  SetFirstAlgorithmLoading = 'SetFirstAlgorithmLoading'
+  SetFirstAlgorithmLoading = 'SetFirstAlgorithmLoading',
+  OpenInfoModal = 'OpenInfoModal',
+  CloseInfoModal = 'CloseInfoModal'
 }
+
+export interface OpenInfoModalPayload {
+  title: string,
+  description: string
+}
+
+export const OpenInfoModal = (payload: OpenInfoModalPayload) => ({
+  type: ActionTypes.OpenInfoModal,
+  payload: payload
+})
+
+export const CloseInfoModal = () => ({
+  type: ActionTypes.CloseInfoModal
+})
 
 export const InitStore = () => ({
   type: ActionTypes.InitStore
