@@ -4,14 +4,18 @@ import { IpcEvents, Point } from '../../models';
 export class FirstAlgorithmController {
   private worker?: BrowserWindow;
 
+  private clearWorker() {
+    if (this.worker) {
+      this.worker.close();
+      this.worker = undefined;
+      ipcMain.removeAllListeners(IpcEvents.WorkerResponseFirstAlgorithm);
+      ipcMain.removeAllListeners(IpcEvents.WorkerLoaded);
+    }
+  }
+
   public Start() {
     ipcMain.on(IpcEvents.StartFirstAlgorithm, async (event: any, H: number, T: number, m: number, M: number) => {
-      if (this.worker) {
-        this.worker.close();
-        this.worker = undefined;
-        ipcMain.removeAllListeners(IpcEvents.WorkerResponseFirstAlgorithm);
-        ipcMain.removeAllListeners(IpcEvents.WorkerLoaded);
-      }
+      this.clearWorker();
 
       this.worker = new BrowserWindow({
         show: false,
@@ -22,10 +26,7 @@ export class FirstAlgorithmController {
         if (event) {
           event.sender.send(IpcEvents.ResponseFirstAlgorithm, result);
         }
-        if (this.worker) {
-          this.worker.close();
-          this.worker = undefined;
-        }
+        this.clearWorker();
       })
 
       ipcMain.once(IpcEvents.WorkerLoaded, (workerEvent: Electron.IpcMainEvent) => {
@@ -36,12 +37,7 @@ export class FirstAlgorithmController {
     });
 
     ipcMain.on(IpcEvents.StopFirstAlgorithm, async (event: any) => {
-      if (this.worker) {
-        this.worker.close();
-        this.worker = undefined;
-        ipcMain.removeAllListeners(IpcEvents.WorkerResponseFirstAlgorithm);
-        ipcMain.removeAllListeners(IpcEvents.WorkerLoaded);
-      }
+      this.clearWorker();
     });
   }
 }
