@@ -1,5 +1,6 @@
-import { app, BrowserWindow, ipcMain, Menu, MenuItem } from 'electron';
+import { app, BrowserWindow, Menu, MenuItem, ipcMain } from 'electron';
 import { Environment } from '../environments/environment';
+import { FirstAlgorithmController } from './controllers/FirstAlgorithmController';
 
 function createWindow() {
   let win = new BrowserWindow({
@@ -63,4 +64,6 @@ function createWindow() {
 
 app.on('ready', async function () {
   createWindow();
+  const firstAlgorithmController = new FirstAlgorithmController();
+  firstAlgorithmController.Start();
 });

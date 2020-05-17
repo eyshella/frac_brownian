@@ -41,6 +41,41 @@ module.exports = [
     },
     {
         mode: 'production',
+        entry: './src/calculation/index.ts',
+        target: 'electron-renderer',
+        module: {
+            rules: [{
+                test: /\.ts$/,
+                include: /src/,
+                use: [{ loader: 'ts-loader' }]
+            }]
+        },
+        resolve: {
+            extensions: ['.tsx', '.ts', '.js'],
+        },
+        output: {
+            path: __dirname + '/build',
+            filename: 'calculation.js'
+        },
+        optimization: {
+            minimizer: [
+                new UglifyJsPlugin({
+                    sourceMap: false,
+                    extractComments: true
+                })
+            ]
+        },
+        plugins: [
+            new HtmlWebpackPlugin({
+                template: './src/calculation/calculation.html',
+                filename: 'calculation.html'
+            }),
+            new webpack.NormalModuleReplacementPlugin(/\.\/environment\.dev/, './environment.prod'),
+            new webpack.EnvironmentPlugin({ 'NODE_ENV': 'production' })
+        ]
+    },
+    {
+        mode: 'production',
         entry: './src/renderer/React.tsx',
         target: 'electron-renderer',
         module: {

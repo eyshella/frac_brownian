@@ -23,6 +23,31 @@ module.exports = [
   },
   {
     mode: 'development',
+    entry: './src/calculation/index.ts',
+    target: 'electron-renderer',
+    module: {
+      rules: [{
+        test: /\.ts$/,
+        include: /src/,
+        use: [{ loader: 'ts-loader' }]
+      }]
+    },
+    resolve: {
+      extensions: ['.tsx', '.ts', '.js'],
+    },
+    output: {
+      path: __dirname + '/build',
+      filename: 'calculation.js'
+    },
+    plugins: [
+      new HtmlWebpackPlugin({
+        template: './src/calculation/calculation.html',
+        filename: 'calculation.html'
+      })
+    ]
+  },
+  {
+    mode: 'development',
     entry: './src/renderer/React.tsx',
     target: 'electron-renderer',
     module: {
@@ -36,7 +61,7 @@ module.exports = [
         use: ['style-loader', 'css-loader'],
       },
       {
-        test: /\.(png|woff|woff2|eot|ttf|svg|gif)$/, 
+        test: /\.(png|woff|woff2|eot|ttf|svg|gif)$/,
         use: 'url-loader'
       }],
     },

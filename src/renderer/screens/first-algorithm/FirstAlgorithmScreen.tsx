@@ -1,11 +1,18 @@
 import { Button, CircularProgress, TextField, Tooltip, Typography } from '@material-ui/core';
 import React from 'react';
-import { CartesianGrid, Legend, LineChart, XAxis, YAxis, Line, ResponsiveContainer } from 'recharts';
+import { connect } from 'react-redux';
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { Dispatch } from 'redux';
 import styled, { withTheme } from 'styled-components';
 
-import { Point } from '../../models';
-import { AlertUtils, TimerUtils } from '../../utils';
-import { BrownianMotionCalculator } from '../../calculation';
+import { FirstAlgorithmParams, Point } from '../../models';
+import { SetFirstAlgorithmParams, StartFirstAlgorithm } from '../../store/Actions';
+import { RootState } from '../../store/RootReducer';
+import {
+  firstAlgorithmLoadingSelector,
+  firstAlgorithmParamsSelector,
+  firstAlgorithmResultSelector,
+} from '../../store/Selectors';
 
 
 const Wrapper = styled.div`
@@ -48,70 +55,31 @@ const StyledButton = styled(Button)`
  min-width:200px !important;
 `
 
-interface State {
-  isCalculationInProgress: boolean;
-  sectionsAmount: string;
-  mParam: string;
-  MParam: string;
-  HParam: string;
-  timeoutSeconds: string;
-  resultPoints: Array<Point>
+interface StateFromProps {
+  params: FirstAlgorithmParams;
+  result: Array<Point>;
+  loading: boolean
 }
 
-class FirstAlgorithmScreenInternal extends React.Component<any, State> {
+interface DispatchFromProps {
+  setParams: (step: FirstAlgorithmParams) => void;
+  start: () => void
+}
+
+interface ThemeProps {
+  theme: any
+}
+
+type Props = DispatchFromProps & StateFromProps & ThemeProps
+
+class FirstAlgorithmScreenInternal extends React.Component<Props> {
   constructor(props: any) {
     super(props);
     this.onSubmit = this.onSubmit.bind(this);
-    this.state = {
-      isCalculationInProgress: false,
-      sectionsAmount: '1000',
-      mParam: '10',
-      MParam: '1000',
-      HParam: '0.5',
-      timeoutSeconds: '600',
-      resultPoints: []
-    }
   }
 
-  public async onSubmit() {
-    if (!this.state.isCalculationInProgress) {
-      this.setState({
-        isCalculationInProgress: true
-      });
-
-      const result: Array<Point> | boolean = await Promise.race([
-        this.calculate(),
-        TimerUtils.RunAsyncTimer((+this.state.timeoutSeconds) * 1000)
-      ]);
-
-
-      if (!Array.isArray(result)) {
-        AlertUtils.ShowErrorAlert('Превышено максимальное время расчета. Попробуйте указать большее время.', 'Операция прервана!')
-        this.setState({
-          isCalculationInProgress: false
-        });
-        return;
-      }
-
-      this.setState({
-        isCalculationInProgress: false,
-        resultPoints: result
-      });
-    }
-  }
-
-  public async calculate(): Promise<Array<Point>> {
-    // Wait for start spinner
-    // TODO: Find better solution here
-    await TimerUtils.RunAsyncTimer(1000);
-
-    try {
-      const result = await BrownianMotionCalculator.Calculate(+this.state.HParam, +this.state.sectionsAmount, +this.state.mParam, +this.state.MParam);
-      return result;
-    } catch (e) {
-      AlertUtils.ShowErrorAlert(`Во время выполнения програмы возникла ошибка: ${e}`, 'Ошибка');
-      return [];
-    }
+  public onSubmit() {
+    this.props.start();
   }
 
   public render() {
@@ -125,12 +93,12 @@ class FirstAlgorithmScreenInternal extends React.Component<any, State> {
           </SettingWrapper>
           <SettingWrapper>
             <TextField
-              id="number_sections"
+              id="T_param"
               variant="outlined"
-              label="Кол-во участков"
+              label="Параметр T"
               type={'number'}
-              value={this.state.sectionsAmount}
-              onChange={(e) => this.setState({ sectionsAmount: e.target.value })}
+              value={this.props.params.TParam}
+              onChange={(e) => this.props.setParams({ ...this.props.params, TParam: e.target.value })}
             />
           </SettingWrapper>
           <SettingWrapper>
@@ -139,8 +107,8 @@ class FirstAlgorithmScreenInternal extends React.Component<any, State> {
               variant="outlined"
               label="Параметр M"
               type={'number'}
-              value={this.state.MParam}
-              onChange={(e) => this.setState({ MParam: e.target.value })}
+              value={this.props.params.MParam}
+              onChange={(e) => this.props.setParams({ ...this.props.params, MParam: e.target.value })}
             />
           </SettingWrapper>
           <SettingWrapper>
@@ -149,8 +117,8 @@ class FirstAlgorithmScreenInternal extends React.Component<any, State> {
               variant="outlined"
               label="Параметр m"
               type={'number'}
-              value={this.state.mParam}
-              onChange={(e) => this.setState({ mParam: e.target.value })}
+              value={this.props.params.mParam}
+              onChange={(e) => this.props.setParams({ ...this.props.params, mParam: e.target.value })}
             />
           </SettingWrapper>
           <SettingWrapper>
@@ -159,8 +127,8 @@ class FirstAlgorithmScreenInternal extends React.Component<any, State> {
               variant="outlined"
               label="Параметр H"
               type={'number'}
-              value={this.state.HParam}
-              onChange={(e) => this.setState({ HParam: e.target.value })}
+              value={this.props.params.HParam}
+              onChange={(e) => this.props.setParams({ ...this.props.params, HParam: e.target.value })}
             />
           </SettingWrapper>
           <SettingWrapper>
@@ -170,22 +138,29 @@ class FirstAlgorithmScreenInternal extends React.Component<any, State> {
                 variant="outlined"
                 label="Max. время (сек)"
                 type={'number'}
-                value={this.state.timeoutSeconds}
-                onChange={(e) => this.setState({ timeoutSeconds: e.target.value })}
+                value={this.props.params.timeoutSeconds}
+                onChange={(e) => this.props.setParams({ ...this.props.params, timeoutSeconds: e.target.value })}
               />
             </Tooltip>
           </SettingWrapper>
           <SettingWrapper>
-            <StyledButton variant="contained" color="primary" onClick={() => this.onSubmit()} disabled={this.state.isCalculationInProgress}>
-              {this.state.isCalculationInProgress ? <CircularProgress size={24} color="secondary" /> : "Рассчитать"}
+            <StyledButton variant="contained" color="primary" onClick={() => this.onSubmit()} disabled={this.props.loading}>
+              {this.props.loading ? <CircularProgress size={24} color="secondary" /> : "Рассчитать"}
             </StyledButton>
           </SettingWrapper>
         </SettingsWrapper>
         <ResultWrapper>
           {
-            this.state.resultPoints && this.state.resultPoints.length > 0 ?
+            this.props.result && this.props.result.length > 0 ?
               <ResponsiveContainer width="99%" height={600}>
-                <LineChart height={600} data={this.state.resultPoints} >
+                <LineChart
+                  height={600}
+                  data={
+                    this.props.result.map(item => ({
+                      x: item.x.toFixed(2),
+                      y: item.y
+                    }))
+                  } >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="x" />
                   <YAxis />
@@ -200,4 +175,19 @@ class FirstAlgorithmScreenInternal extends React.Component<any, State> {
   }
 }
 
-export const FirstAlgorithmScreen = withTheme(FirstAlgorithmScreenInternal);
+function mapStateToProps(state: RootState): StateFromProps {
+  return {
+    loading: firstAlgorithmLoadingSelector(state),
+    params: firstAlgorithmParamsSelector(state),
+    result: firstAlgorithmResultSelector(state)
+  }
+}
+
+function mapDispatchToProps(dispatch: Dispatch): DispatchFromProps {
+  return {
+    setParams: (params: FirstAlgorithmParams) => dispatch(SetFirstAlgorithmParams(params)),
+    start: () => dispatch(StartFirstAlgorithm())
+  };
+}
+
+export const FirstAlgorithmScreen = connect(mapStateToProps, mapDispatchToProps)(withTheme(FirstAlgorithmScreenInternal));
