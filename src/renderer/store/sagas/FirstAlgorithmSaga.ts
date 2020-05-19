@@ -11,10 +11,6 @@ import { IpcEvents } from '../../../models';
 function* startStopCalculation(action: ActionWithPayload) {
   if (action.type === ActionTypes.StopFirstAlgorithm) {
     yield put(SetFirstAlgorithmLoading(false));
-    yield put(OpenInfoModal({
-      title:'Операция была прервана!',
-      description:'Попробуйте установить большее время выполнения.'
-    }))
     ipcRenderer.send(IpcEvents.StopFirstAlgorithm);
     return;
   }
@@ -59,6 +55,10 @@ function* startStopTimeout(action: ActionWithPayload) {
   yield delay(timeoutMs);
   if (action.type === ActionTypes.StartFirstAlgorithm) {
     yield put(StopFirstAlgorithm());
+    yield put(OpenInfoModal({
+      title:'Операция была прервана!',
+      description:'Попробуйте установить большее время выполнения.'
+    }));
   }
 }
 

@@ -6,7 +6,7 @@ import { Dispatch } from 'redux';
 import styled, { withTheme } from 'styled-components';
 
 import { FirstAlgorithmParams, Point } from '../../models';
-import { SetFirstAlgorithmParams, StartFirstAlgorithm } from '../../store/Actions';
+import { SetFirstAlgorithmParams, StartFirstAlgorithm, StopFirstAlgorithm } from '../../store/Actions';
 import { RootState } from '../../store/RootReducer';
 import {
   firstAlgorithmLoadingSelector,
@@ -63,7 +63,8 @@ interface StateFromProps {
 
 interface DispatchFromProps {
   setParams: (step: FirstAlgorithmParams) => void;
-  start: () => void
+  start: () => void;
+  stop: () => void;
 }
 
 interface ThemeProps {
@@ -76,10 +77,15 @@ class FirstAlgorithmScreenInternal extends React.Component<Props> {
   constructor(props: any) {
     super(props);
     this.onSubmit = this.onSubmit.bind(this);
+    this.onStop = this.onStop.bind(this);
   }
 
   public onSubmit() {
     this.props.start();
+  }
+
+  public onStop() {
+    this.props.stop();
   }
 
   public render() {
@@ -148,6 +154,11 @@ class FirstAlgorithmScreenInternal extends React.Component<Props> {
               {this.props.loading ? <CircularProgress size={24} color="secondary" /> : "Рассчитать"}
             </StyledButton>
           </SettingWrapper>
+          <SettingWrapper>
+            <StyledButton variant="contained" color="secondary" onClick={() => this.onStop()} disabled={!this.props.loading}>
+              Стоп
+            </StyledButton>
+          </SettingWrapper>
         </SettingsWrapper>
         <ResultWrapper>
           {
@@ -186,7 +197,8 @@ function mapStateToProps(state: RootState): StateFromProps {
 function mapDispatchToProps(dispatch: Dispatch): DispatchFromProps {
   return {
     setParams: (params: FirstAlgorithmParams) => dispatch(SetFirstAlgorithmParams(params)),
-    start: () => dispatch(StartFirstAlgorithm())
+    start: () => dispatch(StartFirstAlgorithm()),
+    stop: () => dispatch(StopFirstAlgorithm())
   };
 }
 
