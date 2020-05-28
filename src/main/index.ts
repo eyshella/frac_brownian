@@ -5,9 +5,9 @@ import { FirstAlgorithmController } from './controllers/FirstAlgorithmController
 function createWindow() {
   let win = new BrowserWindow({
     minWidth: 1200,
-    minHeight: 800,
+    minHeight: 900,
     width: 1200,
-    height: 800,
+    height: 900,
     webPreferences: {
       nodeIntegration: true
     },
@@ -15,6 +15,8 @@ function createWindow() {
     title: 'Fractional Brownian Motion'
   });
 
+  win.setMenuBarVisibility(false);
+  
   if (Environment.Production) {
     win.setMenu(null);
   } else {

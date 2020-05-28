@@ -1,11 +1,11 @@
 import { Point } from "../renderer/models";
-import { TimerUtils } from "../renderer/utils";
+import { NormalLawGenerator } from "./NormalLawGenerator";
 
-export class BrownianMotionCalculator {
+export class BrownianMotionGenerator {
   public static Calculate(H: number, T: number, m: number, M: number): Array<Point> {
     const randomArray: Array<number> = [];
     for (let i = 1; i <= m * (T + M) - 1; i++) {
-      randomArray.push(this.NormalRandom());
+      randomArray.push(NormalLawGenerator.GenerateStandart());
     }
 
     const noiseArray: Array<number> = [];
@@ -50,12 +50,5 @@ export class BrownianMotionCalculator {
       return Math.pow(x, H - 0.5);
     }
     return 0;
-  }
-
-  private static NormalRandom() {
-    var u = 0, v = 0;
-    while (u === 0) u = Math.random(); //Converting [0,1) to (0,1)
-    while (v === 0) v = Math.random();
-    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
   }
 }

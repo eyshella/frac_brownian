@@ -1,5 +1,3 @@
-import { Point } from "electron";
-
 export interface FirstAlgorithmParams{
   TParam: string;
   mParam: string;
