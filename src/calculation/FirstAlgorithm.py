@@ -2,6 +2,7 @@ import math
 import random
 import json
 import sys
+import gc
 
 random.seed()
 
@@ -13,7 +14,7 @@ def StandartNormal():
         u = random.random()  # Converting [0,1) to (0,1)
     while (v == 0):
         v = random.random()  # Converting [0,1) to (0,1)
-    return math.sqrt(-2.0 * math.log(u)) * math.cos(2.0 * math.pi * v)
+    return (-2 * math.log(u))**0.5 * math.cos(2 * math.pi * v)
 
 
 def FractionalBrownianNoiseKernel(x, H):
@@ -27,20 +28,22 @@ def FractionalBrownianNoise(H, m, M, randomArray, j):
     result = 0
     for i in range(M*m):
         n = i+1
-        result = result + FractionalBrownianNoiseKernel(
-            n / m, H) * randomArray[(j + M) * m - n]
+        result = result + \
+            FractionalBrownianNoiseKernel(
+                n / m, H) * randomArray[(j + M) * m - n]
     return result
 
 
 def FractionalBrownianMotion(H, T, m, M):
     randomArray = []
-    for i in range(m*(T*M)-1):
+    for i in range(m*(T+M)):
         randomArray.append(StandartNormal())
-
     noiseArray = []
 
     for i in range(T):
         noiseArray.append(FractionalBrownianNoise(H, m, M, randomArray, i+1))
+        if(i % 50 == 0):
+            gc.collect()  # To avoid huge RAM usage
 
     result = [
         {
@@ -48,12 +51,11 @@ def FractionalBrownianMotion(H, T, m, M):
             'y': 0
         }
     ]
-
     for i in range(T):
         noiseSum = 0
         for j in range(i+1):
-          noiseSum+=noiseArray[j]
-        
+            noiseSum += noiseArray[j]
+
         result.append({
             'x': (i+1)/T,
             'y': (T**(-H))*noiseSum
