@@ -40,7 +40,6 @@ export class FirstAlgorithmController {
         if (parsedOutput.result == null) {
           return
         }
-        console.log(parsedOutput.result);
         
         event.sender.send(IpcEvents.ResponseFirstAlgorithm, parsedOutput.result);
         this.clearWorker();
