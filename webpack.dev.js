@@ -7,11 +7,17 @@ module.exports = [
     entry: './src/main/index.ts',
     target: 'electron-main',
     module: {
-      rules: [{
-        test: /\.ts$/,
-        include: /src/,
-        use: [{ loader: 'ts-loader' }]
-      }]
+      rules: [
+        {
+          test: /\.ts$/,
+          include: /src/,
+          use: [{ loader: 'ts-loader' }]
+        },
+        {
+          test: /\.py$/i,
+          use: 'raw-loader',
+        }
+      ]
     },
     resolve: {
       extensions: ['.tsx', '.ts', '.js'],
@@ -20,31 +26,6 @@ module.exports = [
       path: __dirname + '/build',
       filename: 'main.js'
     }
-  },
-  {
-    mode: 'development',
-    entry: './src/calculation/index.ts',
-    target: 'electron-renderer',
-    module: {
-      rules: [{
-        test: /\.ts$/,
-        include: /src/,
-        use: [{ loader: 'ts-loader' }]
-      }]
-    },
-    resolve: {
-      extensions: ['.tsx', '.ts', '.js'],
-    },
-    output: {
-      path: __dirname + '/build',
-      filename: 'calculation.js'
-    },
-    plugins: [
-      new HtmlWebpackPlugin({
-        template: './src/calculation/calculation.html',
-        filename: 'calculation.html'
-      })
-    ]
   },
   {
     mode: 'development',
