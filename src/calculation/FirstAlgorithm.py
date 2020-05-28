@@ -58,7 +58,7 @@ def FractionalBrownianMotion(H, T, m, M):
 
         result.append({
             'x': (i+1)/T,
-            'y': (T**(-H))*noiseSum
+            'y': (T**(-H))*noiseSum/(m**0.5)
         })
     return result
 
