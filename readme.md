@@ -10,7 +10,8 @@ This is small desktop app for modeling fractional brownian motion by few differe
    
 ## Setting up environment
 
-Install packages by running `npm install` in project root directory
+1. Install nodeJS (npm will be installed automatically) in case you don't have it. You can find it here https://nodejs.org/
+2. Install packages by running `npm install` in project root directory
 
 ## Run application in debug mode
 
