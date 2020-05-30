@@ -6,7 +6,8 @@ This is small desktop app for modeling fractional brownian motion by few differe
 
 1. NodeJS version 12.16.3 or upper
 2. npm version 6.14.4 or upper
-3. Windows 7 or upper
+3. Python version 3.8.3 or upper
+4. Windows 7 or upper
    
 ## Setting up environment
 
