@@ -1,3 +1,4 @@
 export interface EnvironmentI {
-    Production: boolean
+    Production: boolean;
+    Version: string
 }
