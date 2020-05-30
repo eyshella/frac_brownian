@@ -5,7 +5,7 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis } fro
 import { Dispatch } from 'redux';
 import styled, { withTheme } from 'styled-components';
 
-import { FirstAlgorithmParams, Point } from '../../models';
+import { FirstAlgorithmParams, Point, BrownianMotionResult } from '../../models';
 import { SetFirstAlgorithmParams, StartFirstAlgorithm, StopFirstAlgorithm } from '../../store/Actions';
 import { RootState } from '../../store/RootReducer';
 import {
@@ -57,7 +57,7 @@ const StyledButton = styled(Button)`
 
 interface StateFromProps {
   params: FirstAlgorithmParams;
-  result: Array<Point>;
+  result: BrownianMotionResult;
   loading: boolean
 }
 
@@ -162,12 +162,12 @@ class FirstAlgorithmScreenInternal extends React.Component<Props> {
         </SettingsWrapper>
         <ResultWrapper>
           {
-            this.props.result && this.props.result.length > 0 ?
+            this.props.result && this.props.result.points && this.props.result.points.length > 0 ?
               <ResponsiveContainer width="99%" height={600}>
                 <LineChart
                   height={600}
                   data={
-                    this.props.result.map(item => ({
+                    this.props.result.points.map(item => ({
                       x: item.x.toFixed(2),
                       y: item.y
                     }))

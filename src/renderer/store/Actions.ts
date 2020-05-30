@@ -1,4 +1,4 @@
-import { FirstAlgorithmParams, Point } from '../models';
+import { FirstAlgorithmParams, Point, BrownianMotionResult } from '../models';
 
 export enum ActionTypes {
   InitStore = 'InitStore',
@@ -47,7 +47,7 @@ export const SetFirstAlgorithmParams = (payload: FirstAlgorithmParams) => ({
   payload: payload
 })
 
-export const SetFirstAlgorithmResult = (payload: Array<Point>) => ({
+export const SetFirstAlgorithmResult = (payload: BrownianMotionResult) => ({
   type: ActionTypes.SetFirstAlgorithmResult,
   payload: payload
 })

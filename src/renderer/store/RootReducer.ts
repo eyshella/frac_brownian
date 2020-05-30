@@ -1,12 +1,12 @@
 import { FirstAlgorithmParams } from "../models/FirstAlhorithmParams";
 import { Point } from "electron";
 import { Reducer } from "redux";
-import { ActionWithPayload } from "../models";
+import { ActionWithPayload, BrownianMotionResult } from "../models";
 import { ActionTypes } from "./Actions";
 
 export interface RootState {
   firstAlgorithmParams: FirstAlgorithmParams;
-  firstAlgorithmResult: Array<Point>;
+  firstAlgorithmResult: BrownianMotionResult;
   firstAlgorithmLoading: boolean;
   isInfoModalOpen: boolean;
   infoModalTitle: string;
@@ -21,7 +21,9 @@ const defaultState: RootState = {
     mParam: '30',
     timeoutSeconds: '600'
   },
-  firstAlgorithmResult: [],
+  firstAlgorithmResult: {
+    points: []
+  },
   firstAlgorithmLoading: false,
   isInfoModalOpen: false,
   infoModalTitle: '',

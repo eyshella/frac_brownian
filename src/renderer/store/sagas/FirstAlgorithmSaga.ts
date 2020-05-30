@@ -1,7 +1,7 @@
 import { ipcRenderer } from 'electron';
 import { call, delay, put, select, takeLatest } from 'redux-saga/effects';
 
-import { ActionWithPayload, FirstAlgorithmParams, Point } from '../../models';
+import { ActionWithPayload, FirstAlgorithmParams, Point, BrownianMotionResult } from '../../models';
 import { ActionTypes, SetFirstAlgorithmLoading, SetFirstAlgorithmResult, StopFirstAlgorithm, OpenInfoModal } from '../Actions';
 import { RootState } from '../RootReducer';
 import { firstAlgorithmParamsSelector } from '../Selectors';
@@ -25,7 +25,7 @@ function* startStopCalculation(action: ActionWithPayload) {
   const M = +params.MParam;
 
   const runCalculationPromise = new Promise((resolve, reject) => {
-    ipcRenderer.once(IpcEvents.ResponseFirstAlgorithm, (event: any, result: Array<Point>) => {
+    ipcRenderer.once(IpcEvents.ResponseFirstAlgorithm, (event: any, result: BrownianMotionResult | null) => {
       if (result == null) {
         reject();
       }
@@ -34,8 +34,11 @@ function* startStopCalculation(action: ActionWithPayload) {
     ipcRenderer.send(IpcEvents.StartFirstAlgorithm, H, T, m, M);
   })
 
-  const result: Array<Point> = yield call(() => runCalculationPromise);
-  yield put(SetFirstAlgorithmResult(result));
+  try {
+    const result: BrownianMotionResult = yield call(() => runCalculationPromise);
+    yield put(SetFirstAlgorithmResult(result));
+  } catch (e) { }
+
   yield put(SetFirstAlgorithmLoading(false));
 }
 
@@ -56,8 +59,8 @@ function* startStopTimeout(action: ActionWithPayload) {
   if (action.type === ActionTypes.StartFirstAlgorithm) {
     yield put(StopFirstAlgorithm());
     yield put(OpenInfoModal({
-      title:'Операция была прервана!',
-      description:'Попробуйте установить большее время выполнения.'
+      title: 'Операция была прервана!',
+      description: 'Попробуйте установить большее время выполнения.'
     }));
   }
 }

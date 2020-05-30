@@ -1,6 +1,7 @@
 import { app, BrowserWindow, Menu, MenuItem, ipcMain } from 'electron';
 import { Environment } from '../environments/environment';
 import { FirstAlgorithmController } from './controllers/FirstAlgorithmController';
+import { SecondAlgorithmController } from './controllers';
 
 function createWindow() {
   let win = new BrowserWindow({
@@ -16,7 +17,7 @@ function createWindow() {
   });
 
   win.setMenuBarVisibility(false);
-  
+
   if (Environment.Production) {
     win.setMenu(null);
   } else {
@@ -65,8 +66,10 @@ function createWindow() {
 }
 
 const firstAlgorithmController = new FirstAlgorithmController();
+const secondAlgorithmController = new SecondAlgorithmController();
 
 app.on('ready', async function () {
   createWindow();
   firstAlgorithmController.Start();
+  secondAlgorithmController.Start();
 });

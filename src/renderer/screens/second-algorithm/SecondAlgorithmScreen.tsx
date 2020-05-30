@@ -57,7 +57,7 @@ const StyledButton = styled(Button)`
 
 interface StateFromProps {
   params: FirstAlgorithmParams;
-  result: Array<Point>;
+  //result: Array<Point>;
   loading: boolean
 }
 
@@ -142,7 +142,7 @@ class SecondAlgorithmScreenInternal extends React.Component<Props> {
         </SettingsWrapper>
         <ResultWrapper>
           {
-            this.props.result && this.props.result.length > 0 ?
+           /*  this.props.result && this.props.result.length > 0 ?
               <ResponsiveContainer width="99%" height={600}>
                 <LineChart
                   height={600}
@@ -158,7 +158,7 @@ class SecondAlgorithmScreenInternal extends React.Component<Props> {
                   <Line type="monotone" dataKey="y" dot={false} stroke={this.props.theme.palette.secondary.main} />
                 </LineChart>
               </ResponsiveContainer> :
-              null
+              null */
           }
         </ResultWrapper>
       </Wrapper>
@@ -170,7 +170,7 @@ function mapStateToProps(state: RootState): StateFromProps {
   return {
     loading: firstAlgorithmLoadingSelector(state),
     params: firstAlgorithmParamsSelector(state),
-    result: firstAlgorithmResultSelector(state)
+    //result: firstAlgorithmResultSelector(state)
   }
 }
 

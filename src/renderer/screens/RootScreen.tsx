@@ -26,6 +26,7 @@ const ContentWrapper = styled.div<ContentWrapperProps>`
   flex-grow:1;
   padding:20px 100px;
   box-sizing:border-box;
+  overflow:auto;
 `
 
 const StyledTabs = styled(Tabs)`

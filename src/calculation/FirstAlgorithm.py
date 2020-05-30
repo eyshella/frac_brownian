@@ -40,7 +40,7 @@ def ConstantIntegral(x, H):
 
 
 def CalculateConstant(H):
-    integral = quad(ConstantIntegral, 0, float('inf'), args=(H))
+    integral = quad(ConstantIntegral, 0, float('inf'), args=(H)) # Calculating integral
     return (integral[0]+1/(2*H))**0.5
 
 
@@ -82,4 +82,4 @@ M = int(sys.argv[4])
 
 result = FractionalBrownianMotion(H, T, m, M)
 
-print(json.dumps({'result': result}, separators=(',', ':')))
+print(json.dumps({'points': result}, separators=(',', ':')))
