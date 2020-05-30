@@ -5,6 +5,9 @@ import sys
 import gc
 
 
+random.seed()
+
+
 def StandartNormal():
     u = 0
     v = 0
@@ -27,3 +30,47 @@ def Gamma(shape):
         x = z**c
         if z+e <= d+x:
             return x
+
+
+def Poisson(T, l):
+    result = []
+    a = random.random()
+    sigma = -math.log(a)/l
+    result.append(sigma)
+    while sigma < T:
+        a = random.random()
+        sigma = sigma - math.log(a)/l
+        result.append(sigma)
+    return result
+
+
+def FractionalBrownianMotion(H, tetta, T):
+    x = 2-2*H
+    l = Gamma(x)*tetta
+    poisson = Poisson(T, l)
+    L = len(poisson)
+    randomArray = []
+    for i in range(L):
+        r = (random.random()-1/2)*math.sqrt(6*(2-x)*(1-x)*(tetta**x))
+        randomArray.append(r)
+    result = [{
+        'x': 0,
+        'y': 0
+    }]
+
+    for i in range(L):
+        result.append({
+            'x': poisson[i],
+            'y': i*randomArray[i]
+        })
+
+    return result
+
+
+H = float(sys.argv[1])
+tetta = int(sys.argv[2])
+T = int(sys.argv[3])
+
+result = FractionalBrownianMotion(H, tetta, T)
+
+print(json.dumps({'points': result}, separators=(',', ':')))
