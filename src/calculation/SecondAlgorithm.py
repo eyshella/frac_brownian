@@ -61,7 +61,6 @@ def FractionalBrownianMotion(H, tetta, T):
     }]
 
     for i in range(L):
-        y = 0
         poissonDelta = poisson[i]
 
         if i != 0:
