@@ -61,7 +61,7 @@ def FractionalBrownianMotion(H, tetta, T):
     for i in range(L):
         result.append({
             'x': poisson[i],
-            'y': i*randomArray[i]
+            'y': randomArray[i]
         })
 
     return result
@@ -69,7 +69,7 @@ def FractionalBrownianMotion(H, tetta, T):
 
 H = float(sys.argv[1])
 tetta = int(sys.argv[2])
-T = int(sys.argv[3])
+T = 1
 
 result = FractionalBrownianMotion(H, tetta, T)
 

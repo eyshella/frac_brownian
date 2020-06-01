@@ -5,13 +5,13 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis } fro
 import { Dispatch } from 'redux';
 import styled, { withTheme } from 'styled-components';
 
-import { FirstAlgorithmParams, Point } from '../../models';
-import { SetFirstAlgorithmParams, StartFirstAlgorithm, StopFirstAlgorithm } from '../../store/Actions';
+import { FirstAlgorithmParams, SecondAlgorithmParams, BrownianMotionResult } from '../../models';
+import { StartSecondAlgorithm, StopSecondAlgorithm, SetSecondAlgorithmParams } from '../../store/Actions';
 import { RootState } from '../../store/RootReducer';
 import {
-  firstAlgorithmLoadingSelector,
-  firstAlgorithmParamsSelector,
-  firstAlgorithmResultSelector,
+  secondAlgorithmLoadingSelector,
+  secondAlgorithmParamsSelector,
+  secondAlgorithmResultSelector,
 } from '../../store/Selectors';
 
 
@@ -56,13 +56,13 @@ const StyledButton = styled(Button)`
 `
 
 interface StateFromProps {
-  params: FirstAlgorithmParams;
-  //result: Array<Point>;
+  params: SecondAlgorithmParams;
+  result: BrownianMotionResult;
   loading: boolean
 }
 
 interface DispatchFromProps {
-  setParams: (step: FirstAlgorithmParams) => void;
+  setParams: (step: SecondAlgorithmParams) => void;
   start: () => void;
   stop: () => void;
 }
@@ -99,22 +99,22 @@ class SecondAlgorithmScreenInternal extends React.Component<Props> {
           </SettingWrapper>
           <SettingWrapper>
             <TextField
-              id="T_param"
-              variant="outlined"
-              label="Параметр T"
-              type={'number'}
-              value={this.props.params.TParam}
-              onChange={(e) => this.props.setParams({ ...this.props.params, TParam: e.target.value })}
-            />
-          </SettingWrapper>
-          <SettingWrapper>
-            <TextField
               id="H_param"
               variant="outlined"
               label="Параметр H"
               type={'number'}
               value={this.props.params.HParam}
               onChange={(e) => this.props.setParams({ ...this.props.params, HParam: e.target.value })}
+            />
+          </SettingWrapper>
+          <SettingWrapper>
+            <TextField
+              id="Tetta_param"
+              variant="outlined"
+              label="Параметр Tetta"
+              type={'number'}
+              value={this.props.params.TettaParam}
+              onChange={(e) => this.props.setParams({ ...this.props.params, TettaParam: e.target.value })}
             />
           </SettingWrapper>
           <SettingWrapper>
@@ -142,12 +142,12 @@ class SecondAlgorithmScreenInternal extends React.Component<Props> {
         </SettingsWrapper>
         <ResultWrapper>
           {
-           /*  this.props.result && this.props.result.length > 0 ?
+            this.props.result && this.props.result.points && this.props.result.points.length > 0 ?
               <ResponsiveContainer width="99%" height={600}>
                 <LineChart
                   height={600}
                   data={
-                    this.props.result.map(item => ({
+                    this.props.result.points.map(item => ({
                       x: item.x.toFixed(2),
                       y: item.y
                     }))
@@ -158,7 +158,7 @@ class SecondAlgorithmScreenInternal extends React.Component<Props> {
                   <Line type="monotone" dataKey="y" dot={false} stroke={this.props.theme.palette.secondary.main} />
                 </LineChart>
               </ResponsiveContainer> :
-              null */
+              null
           }
         </ResultWrapper>
       </Wrapper>
@@ -168,17 +168,17 @@ class SecondAlgorithmScreenInternal extends React.Component<Props> {
 
 function mapStateToProps(state: RootState): StateFromProps {
   return {
-    loading: firstAlgorithmLoadingSelector(state),
-    params: firstAlgorithmParamsSelector(state),
-    //result: firstAlgorithmResultSelector(state)
+    loading: secondAlgorithmLoadingSelector(state),
+    params: secondAlgorithmParamsSelector(state),
+    result: secondAlgorithmResultSelector(state)
   }
 }
 
 function mapDispatchToProps(dispatch: Dispatch): DispatchFromProps {
   return {
-    setParams: (params: FirstAlgorithmParams) => dispatch(SetFirstAlgorithmParams(params)),
-    start: () => dispatch(StartFirstAlgorithm()),
-    stop: () => dispatch(StopFirstAlgorithm())
+    setParams: (params: SecondAlgorithmParams) => dispatch(SetSecondAlgorithmParams(params)),
+    start: () => dispatch(StartSecondAlgorithm()),
+    stop: () => dispatch(StopSecondAlgorithm())
   };
 }
 

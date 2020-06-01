@@ -1,4 +1,4 @@
-import { FirstAlgorithmParams, Point, BrownianMotionResult } from '../models';
+import { FirstAlgorithmParams, Point, BrownianMotionResult, SecondAlgorithmParams } from '../models';
 
 export enum ActionTypes {
   InitStore = 'InitStore',
@@ -7,6 +7,11 @@ export enum ActionTypes {
   StartFirstAlgorithm = 'StartFirstAlgorithm',
   StopFirstAlgorithm = 'StopFirstAlgorithm',
   SetFirstAlgorithmLoading = 'SetFirstAlgorithmLoading',
+  SetSecondAlgorithmParams = 'SetSecondAlgorithmParams',
+  SetSecondAlgorithmResult = 'SetSecondAlgorithmResult',
+  StartSecondAlgorithm = 'StartSecondAlgorithm',
+  StopSecondAlgorithm = 'StopSecondAlgorithm',
+  SetSecondAlgorithmLoading = 'SetSecondAlgorithmLoading',
   OpenInfoModal = 'OpenInfoModal',
   CloseInfoModal = 'CloseInfoModal'
 }
@@ -49,5 +54,28 @@ export const SetFirstAlgorithmParams = (payload: FirstAlgorithmParams) => ({
 
 export const SetFirstAlgorithmResult = (payload: BrownianMotionResult) => ({
   type: ActionTypes.SetFirstAlgorithmResult,
+  payload: payload
+})
+
+export const StartSecondAlgorithm = () => ({
+  type: ActionTypes.StartSecondAlgorithm
+})
+
+export const StopSecondAlgorithm = () => ({
+  type: ActionTypes.StopSecondAlgorithm
+})
+
+export const SetSecondAlgorithmLoading = (payload: boolean) => ({
+  type: ActionTypes.SetSecondAlgorithmLoading,
+  payload: payload
+})
+
+export const SetSecondAlgorithmParams = (payload: SecondAlgorithmParams) => ({
+  type: ActionTypes.SetSecondAlgorithmParams,
+  payload: payload
+})
+
+export const SetSecondAlgorithmResult = (payload: BrownianMotionResult) => ({
+  type: ActionTypes.SetSecondAlgorithmResult,
   payload: payload
 })

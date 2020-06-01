@@ -1,13 +1,16 @@
 import { FirstAlgorithmParams } from "../models/FirstAlhorithmParams";
 import { Point } from "electron";
 import { Reducer } from "redux";
-import { ActionWithPayload, BrownianMotionResult } from "../models";
+import { ActionWithPayload, BrownianMotionResult, SecondAlgorithmParams } from "../models";
 import { ActionTypes } from "./Actions";
 
 export interface RootState {
   firstAlgorithmParams: FirstAlgorithmParams;
   firstAlgorithmResult: BrownianMotionResult;
   firstAlgorithmLoading: boolean;
+  secondAlgorithmParams: SecondAlgorithmParams;
+  secondAlgorithmResult: BrownianMotionResult;
+  secondAlgorithmLoading: boolean;
   isInfoModalOpen: boolean;
   infoModalTitle: string;
   infoModalDescription: string;
@@ -21,10 +24,19 @@ const defaultState: RootState = {
     mParam: '30',
     timeoutSeconds: '600'
   },
+  secondAlgorithmParams: {
+    HParam: '0.75',
+    TettaParam: '100',
+    timeoutSeconds: '600'
+  },
   firstAlgorithmResult: {
     points: []
   },
+  secondAlgorithmResult: {
+    points: []
+  },
   firstAlgorithmLoading: false,
+  secondAlgorithmLoading: false,
   isInfoModalOpen: false,
   infoModalTitle: '',
   infoModalDescription: '',
@@ -50,6 +62,21 @@ export const RootReducer: Reducer<RootState, ActionWithPayload> = (state: RootSt
       return {
         ...state,
         firstAlgorithmLoading: action.payload
+      }
+    case ActionTypes.SetSecondAlgorithmParams:
+      return {
+        ...state,
+        secondAlgorithmParams: action.payload
+      }
+    case ActionTypes.SetSecondAlgorithmResult:
+      return {
+        ...state,
+        secondAlgorithmResult: action.payload
+      }
+    case ActionTypes.SetSecondAlgorithmLoading:
+      return {
+        ...state,
+        secondAlgorithmLoading: action.payload
       }
     case ActionTypes.OpenInfoModal:
       return {

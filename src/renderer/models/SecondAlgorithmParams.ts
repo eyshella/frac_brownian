@@ -2,7 +2,7 @@ export interface SecondAlgorithmParams {
   TettaParam: string;
   HParam: string;
   timeoutSeconds: string;
-  lawParam: SecondAlgorithmLaw;
+  //lawParam: SecondAlgorithmLaw;
 }
 
 export enum SecondAlgorithmLaw {
