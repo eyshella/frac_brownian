@@ -33,13 +33,15 @@ def Gamma(shape):
 
 
 def Poisson(T, l):
-    result = []
-    a = random.random()
-    sigma = -math.log(a)/l
-    result.append(sigma)
+    result = [0]
+    sigma = 0
     while sigma < T:
         a = random.random()
         sigma = sigma - math.log(a)/l
+
+        if(sigma > T):
+            sigma = T
+
         result.append(sigma)
     return result
 
@@ -59,9 +61,15 @@ def FractionalBrownianMotion(H, tetta, T):
     }]
 
     for i in range(L):
+        y = 0
+        poissonDelta = poisson[i]
+
+        if i != 0:
+            poissonDelta -= poisson[i-1]
+
         result.append({
             'x': poisson[i],
-            'y': randomArray[i]
+            'y': randomArray[i]*poissonDelta + result[len(result)-1].get('y')
         })
 
     return result

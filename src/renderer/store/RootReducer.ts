@@ -26,7 +26,7 @@ const defaultState: RootState = {
   },
   secondAlgorithmParams: {
     HParam: '0.75',
-    TettaParam: '100',
+    TettaParam: '10000',
     timeoutSeconds: '600'
   },
   firstAlgorithmResult: {
