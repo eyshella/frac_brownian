@@ -36,6 +36,14 @@ function* startStopCalculation(action: ActionWithPayload) {
 
   try {
     const result: BrownianMotionResult = yield call(() => runCalculationPromise);
+    
+    if (result.fileSize != null && result.fileSize > 20000000) {
+      yield put(OpenInfoModal({
+        title: 'Слишком много данных',
+        description: `График не будет отрисован. Размер данных для отрисовки графика составляет ${(result.fileSize/1000000.0).toFixed(2)} MB.`
+      }));
+    }
+
     yield put(SetFirstAlgorithmResult(result));
   } catch (e) { }
 

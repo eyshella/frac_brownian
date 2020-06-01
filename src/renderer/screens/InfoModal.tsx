@@ -12,8 +12,8 @@ import { CloseInfoModal } from '../store/Actions';
 
 const StyledCard = styled(Card)`
   width:600px;
-  max-height:200px;
   z-index:10;
+  min-height:200px;
 `
 
 const CenteredTypography = styled(Typography)`
@@ -32,10 +32,7 @@ const customStyles = {
     width: '620px',
     backgroundColor:'transparent',
     background:'transparent',
-    height: '220px',
     maxWidth: '100%',
-    maxHeight: '100%',
-    overflow: 'hidden',
     padding: '10px',
   }
 };

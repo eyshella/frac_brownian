@@ -2,10 +2,26 @@ import math
 import random
 import json
 import sys
+import os
+import time
 import gc
 from scipy.integrate import quad
 
 random.seed()
+
+
+def SaveResultToFileAsJSON(x, y):
+    ts = time.time()
+    file_path = os.path.abspath("./output/FirstAlgorithm-"+str(ts)+".json")
+    directory = os.path.dirname(file_path)
+    try:
+        os.stat(directory)
+    except:
+        os.mkdir(directory)
+    file = open(file_path, 'w+')
+
+    json.dump({'x': x, 'y': y}, file, separators=(',', ':'))
+    return file_path
 
 
 def StandartNormal():
@@ -40,7 +56,8 @@ def ConstantIntegral(x, H):
 
 
 def CalculateConstant(H):
-    integral = quad(ConstantIntegral, 0, float('inf'), args=(H)) # Calculating integral
+    integral = quad(ConstantIntegral, 0, float('inf'),
+                    args=(H))  # Calculating integral
     return (integral[0]+1/(2*H))**0.5
 
 
@@ -55,12 +72,8 @@ def FractionalBrownianMotion(H, T, m, M):
         if(i % 50 == 0):
             gc.collect()  # To avoid huge RAM usage
 
-    result = [
-        {
-            'x': 0,
-            'y': 0
-        }
-    ]
+    x = [0]
+    y = [0]
 
     constant = CalculateConstant(H)
     for i in range(T):
@@ -68,11 +81,9 @@ def FractionalBrownianMotion(H, T, m, M):
         for j in range(i+1):
             noiseSum += noiseArray[j]
 
-        result.append({
-            'x': (i+1)/T,
-            'y': (T**(-H))*noiseSum/(constant*m**0.5)
-        })
-    return result
+        x.append((i+1)/T)
+        y.append((T**(-H))*noiseSum/(constant*m**0.5))
+    return x, y
 
 
 H = float(sys.argv[1])
@@ -80,6 +91,7 @@ T = int(sys.argv[2])
 m = int(sys.argv[3])
 M = int(sys.argv[4])
 
-result = FractionalBrownianMotion(H, T, m, M)
+x, y = FractionalBrownianMotion(H, T, m, M)
 
-print(json.dumps({'points': result}, separators=(',', ':')))
+fileName = SaveResultToFileAsJSON(x, y)
+print(json.dumps({'filePath': fileName}))

@@ -26,14 +26,18 @@ const defaultState: RootState = {
   },
   secondAlgorithmParams: {
     HParam: '0.75',
-    TettaParam: '10000',
+    TettaParam: '1000',
     timeoutSeconds: '600'
   },
   firstAlgorithmResult: {
-    points: []
+    x: [],
+    y: [],
+    filePath: ''
   },
   secondAlgorithmResult: {
-    points: []
+    x: [],
+    y: [],
+    filePath: ''
   },
   firstAlgorithmLoading: false,
   secondAlgorithmLoading: false,

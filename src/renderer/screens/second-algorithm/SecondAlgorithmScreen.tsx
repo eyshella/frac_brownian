@@ -41,6 +41,9 @@ const SettingWrapper = styled.div`
   align-items:center;
   min-width:250px;
 `
+const ResultItemWrapper = styled.div`
+
+`
 
 const ResultWrapper = styled.div`
   display:flex;
@@ -142,14 +145,18 @@ class SecondAlgorithmScreenInternal extends React.Component<Props> {
         </SettingsWrapper>
         <ResultWrapper>
           {
-            this.props.result && this.props.result.points && this.props.result.points.length > 0 ?
+            this.props.result &&
+              this.props.result.x &&
+              this.props.result.y &&
+              this.props.result.x.length > 0 &&
+              this.props.result.x.length <= this.props.result.y.length ?
               <ResponsiveContainer width="99%" height={600}>
                 <LineChart
                   height={600}
                   data={
-                    this.props.result.points.map(item => ({
-                      x: item.x.toFixed(2),
-                      y: item.y
+                    this.props.result.x.map((item:number, index:number) => ({
+                      x: item.toFixed(2),
+                      y: this.props.result.y![index]
                     }))
                   } >
                   <CartesianGrid strokeDasharray="3 3" />
@@ -160,6 +167,11 @@ class SecondAlgorithmScreenInternal extends React.Component<Props> {
               </ResponsiveContainer> :
               null
           }
+          <SettingWrapper>
+            <StyledButton variant="contained" color="secondary" onClick={() => this.onStop()} disabled={!this.props.loading}>
+              Стоп
+            </StyledButton>
+          </SettingWrapper>
         </ResultWrapper>
       </Wrapper>
     );

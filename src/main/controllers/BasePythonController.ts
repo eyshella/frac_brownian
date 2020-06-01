@@ -1,6 +1,7 @@
 import { PythonShell, Options, PythonShellError } from "python-shell";
 import InstallPackages from '!!raw-loader!../../calculation/InstallPackages.py';
 import { ipcMain, dialog } from "electron";
+import fs from 'fs';
 import { IpcEvents } from "models";
 
 export abstract class BasePythonController {
@@ -71,16 +72,38 @@ export abstract class BasePythonController {
       this.stoped = false;
       return null;
     }
-
     if (output == null || output.length === 0) {
       throw new Error('Выходные данные равны null или пусты');
     }
 
-    const parsedOutput = JSON.parse(output[output.length - 1]);
+    let parsedOutput = JSON.parse(output[output.length - 1]);
     if (parsedOutput == null) {
       throw new Error('Ошибка при десериализации JSON');
     }
-    
+
+    if (parsedOutput.filePath != null) {
+      try {
+        const stats = fs.statSync(parsedOutput.filePath)
+        const fileSizeInBytes = stats["size"]
+
+        if (fileSizeInBytes < 20000000) {
+          const fileContent = fs.readFileSync(parsedOutput.filePath, 'utf8');
+          const parsedFile = JSON.parse(fileContent);
+          if (parsedFile == null) {
+            throw new Error('Ошибка при десериализации JSON');
+          }
+          parsedOutput = {
+            ...parsedOutput,
+            ...parsedFile,
+          }
+        }
+
+        parsedOutput.fileSize=fileSizeInBytes;
+      } catch (e) {
+        throw new Error(`Ошибка при чтении JSON файла ${parsedOutput.filePath}: ${e.message} ${e.stacktrace}`);
+      }
+    }
+
     return parsedOutput;
   }
 
