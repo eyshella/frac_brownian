@@ -258,7 +258,6 @@ class SecondAlgorithmScreenInternal extends React.Component<Props> {
             }
           </ResultActionsWrapper>
         </ResultWrapper >
-        <canvas id="myCanvas"></canvas>
       </Wrapper >
     );
   }
