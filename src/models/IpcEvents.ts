@@ -5,4 +5,6 @@ export enum IpcEvents{
   StartSecondAlgorithm = 'StartSecondAlgorithm',
   StopSecondAlgorithm = 'StopSecondAlgorithm',
   ResponseSecondAlgorithm = 'ResponseSecondAlgorithm',
+  CopyFile='CopyFile',
+  CopyFileFinished='CopyFileFinished'
 }

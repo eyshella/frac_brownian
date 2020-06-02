@@ -1,7 +1,7 @@
 import { app, BrowserWindow, Menu, MenuItem, ipcMain } from 'electron';
 import { Environment } from '../environments/environment';
 import { FirstAlgorithmController } from './controllers/FirstAlgorithmController';
-import { SecondAlgorithmController } from './controllers';
+import { SecondAlgorithmController, SaveFileController } from './controllers';
 
 function createWindow() {
   let win = new BrowserWindow({
@@ -67,9 +67,11 @@ function createWindow() {
 
 const firstAlgorithmController = new FirstAlgorithmController();
 const secondAlgorithmController = new SecondAlgorithmController();
+const saveFileController = new SaveFileController();
 
 app.on('ready', async function () {
   createWindow();
   firstAlgorithmController.Start();
+  saveFileController.Start();
   secondAlgorithmController.Start();
 });

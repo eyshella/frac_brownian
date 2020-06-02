@@ -1,12 +1,15 @@
 import { Button, CircularProgress, TextField, Tooltip, Typography } from '@material-ui/core';
+import { BrowserWindow, ipcRenderer, remote, SaveDialogReturnValue } from 'electron';
+import FileSaver from 'file-saver';
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { Dispatch } from 'redux';
 import styled, { withTheme } from 'styled-components';
 
-import { FirstAlgorithmParams, SecondAlgorithmParams, BrownianMotionResult } from '../../models';
-import { StartSecondAlgorithm, StopSecondAlgorithm, SetSecondAlgorithmParams } from '../../store/Actions';
+import { BrownianMotionResult, IpcEvents, SecondAlgorithmParams } from '../../models';
+import { SetSecondAlgorithmParams, StartSecondAlgorithm, StopSecondAlgorithm } from '../../store/Actions';
 import { RootState } from '../../store/RootReducer';
 import {
   secondAlgorithmLoadingSelector,
@@ -41,8 +44,13 @@ const SettingWrapper = styled.div`
   align-items:center;
   min-width:250px;
 `
-const ResultItemWrapper = styled.div`
-
+const ResultActionsWrapper = styled.div`
+  padding:20px 0px;
+  display:flex;
+  justify-content:space-evenly;
+  align-items:center;
+  align-self:center;
+  width:100%;
 `
 
 const ResultWrapper = styled.div`
@@ -77,10 +85,14 @@ interface ThemeProps {
 type Props = DispatchFromProps & StateFromProps & ThemeProps
 
 class SecondAlgorithmScreenInternal extends React.Component<Props> {
+  private currentChart: LineChart | undefined;
+
   constructor(props: any) {
     super(props);
     this.onSubmit = this.onSubmit.bind(this);
     this.onStop = this.onStop.bind(this);
+    this.onSaveImage = this.onSaveImage.bind(this);
+    this.onSaveData = this.onSaveData.bind(this);
   }
 
   public onSubmit() {
@@ -89,6 +101,29 @@ class SecondAlgorithmScreenInternal extends React.Component<Props> {
 
   public onStop() {
     this.props.stop();
+  }
+
+  public onSaveImage() {
+    if (this.currentChart == null) {
+      return;
+    }
+
+    let chartSVG = (ReactDOM.findDOMNode(this.currentChart) as Element).children![0];
+
+    let svgURL = new XMLSerializer().serializeToString(chartSVG);
+    let svgBlob = new Blob([svgURL], { type: "image/svg+xml;charset=utf-8" });
+    FileSaver.saveAs(svgBlob, "SecondAlgorithmImage.svg");
+  }
+
+  public onSaveData() {
+    const win: BrowserWindow = remote.getCurrentWindow();
+    remote.dialog.showSaveDialog(win, {
+      defaultPath: 'SecondAlgorithmData.json'
+    }).then((value: SaveDialogReturnValue) => {
+      if (value.filePath != null) {
+        ipcRenderer.send(IpcEvents.CopyFile, this.props.result.filePath, value.filePath)
+      }
+    });
   }
 
   public render() {
@@ -153,8 +188,9 @@ class SecondAlgorithmScreenInternal extends React.Component<Props> {
               <ResponsiveContainer width="99%" height={600}>
                 <LineChart
                   height={600}
+                  ref={(chart: LineChart) => this.currentChart = chart}
                   data={
-                    this.props.result.x.map((item:number, index:number) => ({
+                    this.props.result.x.map((item: number, index: number) => ({
                       x: item.toFixed(2),
                       y: this.props.result.y![index]
                     }))
@@ -167,13 +203,23 @@ class SecondAlgorithmScreenInternal extends React.Component<Props> {
               </ResponsiveContainer> :
               null
           }
-          <SettingWrapper>
-            <StyledButton variant="contained" color="secondary" onClick={() => this.onStop()} disabled={!this.props.loading}>
-              Стоп
-            </StyledButton>
-          </SettingWrapper>
-        </ResultWrapper>
-      </Wrapper>
+          <ResultActionsWrapper>
+            {
+              (this.props.result != null && this.props.result.x != null && this.props.result.x.length !== 0) &&
+              <StyledButton variant="outlined" color="primary" onClick={() => this.onSaveImage()} disabled={!this.props.result || !this.props.result.x || !this.props.result.x.length}>
+                Сохранить изображение
+              </StyledButton>
+            }
+            {
+              (this.props.result != null && this.props.result.filePath != null && this.props.result.filePath != '') &&
+              <StyledButton variant="outlined" color="primary" onClick={() => this.onSaveData()} disabled={!this.props.result || !this.props.result.filePath}>
+                Сохранить данные
+              </StyledButton>
+            }
+          </ResultActionsWrapper>
+        </ResultWrapper >
+        <canvas id="myCanvas"></canvas>
+      </Wrapper >
     );
   }
 }
