@@ -7,6 +7,7 @@ import { connect } from 'react-redux';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { Dispatch } from 'redux';
 import styled, { withTheme } from 'styled-components';
+import * as svgSaver from 'save-svg-as-png';
 
 import { BrownianMotionResult, IpcEvents, SecondAlgorithmParams } from '../../models';
 import { SetSecondAlgorithmParams, StartSecondAlgorithm, StopSecondAlgorithm } from '../../store/Actions';
@@ -66,6 +67,10 @@ const StyledButton = styled(Button)`
  min-width:200px !important;
 `
 
+const ActionButton = styled(Button)`
+ min-width:100px !important;
+`
+
 interface StateFromProps {
   params: SecondAlgorithmParams;
   result: BrownianMotionResult;
@@ -103,12 +108,42 @@ class SecondAlgorithmScreenInternal extends React.Component<Props> {
     this.props.stop();
   }
 
-  public onSaveImage() {
+  public onSaveImage(asPng = false) {
     if (this.currentChart == null) {
       return;
     }
 
     let chartSVG = (ReactDOM.findDOMNode(this.currentChart) as Element).children![0];
+
+    if (asPng) {
+      svgSaver.svgAsPngUri(chartSVG).then((uri: string) => {
+        try {
+          var byteString = atob(uri.split(',')[1]);
+
+          // separate out the mime component
+          var mimeString = uri.split(',')[0].split(':')[1].split(';')[0]
+
+          // write the bytes of the string to an ArrayBuffer
+          var ab = new ArrayBuffer(byteString.length);
+
+          // create a view into the buffer
+          var ia = new Uint8Array(ab);
+
+          // set the bytes of the buffer to the correct values
+          for (var i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+          }
+
+          // write the ArrayBuffer to a blob, and you're done
+          var blob = new Blob([ab], { type: mimeString });
+
+          FileSaver.saveAs(blob, "SecondAlgorithmImage.png");
+        } catch (e) {
+          console.log(e);
+        }
+      })
+      return;
+    }
 
     let svgURL = new XMLSerializer().serializeToString(chartSVG);
     let svgBlob = new Blob([svgURL], { type: "image/svg+xml;charset=utf-8" });
@@ -206,15 +241,20 @@ class SecondAlgorithmScreenInternal extends React.Component<Props> {
           <ResultActionsWrapper>
             {
               (this.props.result != null && this.props.result.x != null && this.props.result.x.length !== 0) &&
-              <StyledButton variant="outlined" color="primary" onClick={() => this.onSaveImage()} disabled={!this.props.result || !this.props.result.x || !this.props.result.x.length}>
-                Сохранить изображение
-              </StyledButton>
+              <>
+                <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveImage(false)} disabled={!this.props.result || !this.props.result.x || !this.props.result.x.length}>
+                  Сохранить Svg
+                </ActionButton>
+                <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveImage(true)} disabled={!this.props.result || !this.props.result.filePath}>
+                  Сохранить Png
+                </ActionButton>
+              </>
             }
             {
               (this.props.result != null && this.props.result.filePath != null && this.props.result.filePath != '') &&
-              <StyledButton variant="outlined" color="primary" onClick={() => this.onSaveData()} disabled={!this.props.result || !this.props.result.filePath}>
-                Сохранить данные
-              </StyledButton>
+              <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveData()} disabled={!this.props.result || !this.props.result.filePath}>
+                Сохранить Json
+              </ActionButton>
             }
           </ResultActionsWrapper>
         </ResultWrapper >

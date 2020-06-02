@@ -12,7 +12,7 @@ random.seed()
 
 def SaveResultToFileAsJSON(x, y):
     ts =time.time()
-    file_path = os.path.abspath("./output/SecondAlgorithm-"+str(ts)+".json")
+    file_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__))+"/SecondAlgorithm-"+str(ts)+".json")
     directory = os.path.dirname(file_path)
     try:
         os.stat(directory)
