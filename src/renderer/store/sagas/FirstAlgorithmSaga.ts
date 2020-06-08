@@ -1,20 +1,19 @@
 import { ipcRenderer } from 'electron';
-import { call, delay, put, select, takeLatest } from 'redux-saga/effects';
+import { delay, put, select, takeLatest } from 'redux-saga/effects';
 
-import { ActionWithPayload, FirstAlgorithmParams, Point, BrownianMotionResult } from '../../models';
-import { ActionTypes, SetFirstAlgorithmLoading, SetFirstAlgorithmResult, StopFirstAlgorithm, OpenInfoModal } from '../Actions';
+import { IpcEvents, StochasticProcessData } from '../../../models';
+import { ActionWithPayload, FirstAlgorithmParams } from '../../models';
+import {
+  ActionTypes,
+  OpenInfoModal,
+  SetFirstAlgorithmLoading,
+  SetFirstAlgorithmResult,
+  StopFirstAlgorithm,
+} from '../Actions';
 import { RootState } from '../RootReducer';
-import { firstAlgorithmParamsSelector } from '../Selectors';
-import { IpcEvents } from '../../../models';
+import { firstAlgorithmParamsSelector, firstAlgorithmResultSelector } from '../Selectors';
 
-
-function* startStopCalculation(action: ActionWithPayload) {
-  if (action.type === ActionTypes.StopFirstAlgorithm) {
-    yield put(SetFirstAlgorithmLoading(false));
-    ipcRenderer.send(IpcEvents.StopFirstAlgorithm);
-    return;
-  }
-
+function* onStartCalculation(action: ActionWithPayload) {
   yield put(SetFirstAlgorithmLoading(true));
 
   const state: RootState = yield select();
@@ -23,39 +22,32 @@ function* startStopCalculation(action: ActionWithPayload) {
   const T = +params.TParam;
   const m = +params.mParam;
   const M = +params.MParam;
+  const N = +params.numberOfPaths;
+  const point = +params.point;
+  ipcRenderer.send(IpcEvents.StartFirstAlgorithm, H, T, m, M, N,point);
+}
 
-  const runCalculationPromise = new Promise((resolve, reject) => {
-    ipcRenderer.once(IpcEvents.ResponseFirstAlgorithm, (event: any, result: BrownianMotionResult | null) => {
-      if (result == null) {
-        reject();
-      }
-      resolve(result);
-    })
-    ipcRenderer.send(IpcEvents.StartFirstAlgorithm, H, T, m, M);
-  })
+function* onFinishCalculation(action: ActionWithPayload) {
+  const state: RootState = yield select();
 
-  try {
-    const result: BrownianMotionResult = yield call(() => runCalculationPromise);
-    
-    if (result.fileSize != null && result.fileSize > 20000000) {
-      yield put(OpenInfoModal({
-        title: 'Слишком много данных',
-        description: `График не будет отрисован. Размер данных для отрисовки графика составляет ${(result.fileSize/1000000.0).toFixed(2)} MB.`
-      }));
-    }
+  const result: StochasticProcessData = firstAlgorithmResultSelector(state);
 
-    yield put(SetFirstAlgorithmResult(result));
-  } catch (e) { }
+  yield put(SetFirstAlgorithmResult(action.payload[0]));
 
   yield put(SetFirstAlgorithmLoading(false));
 }
 
+function* onStopCalculation(action: ActionWithPayload) {
+  ipcRenderer.send(IpcEvents.StopFirstAlgorithm);
+  yield put(SetFirstAlgorithmLoading(false));
+}
 
-function* startStopTimeout(action: ActionWithPayload) {
-  if (action.type === ActionTypes.SetFirstAlgorithmResult) {
+function* stopTimeout(action: ActionWithPayload) {
+  if (action.type === IpcEvents.ResponseFirstAlgorithm) {
     yield put(SetFirstAlgorithmLoading(false));
     return;
   }
+
   const state: RootState = yield select();
   const params: FirstAlgorithmParams = firstAlgorithmParamsSelector(state);
 
@@ -74,6 +66,8 @@ function* startStopTimeout(action: ActionWithPayload) {
 }
 
 export function* FirstAlgorithmSagaWatcher() {
-  yield takeLatest([ActionTypes.StartFirstAlgorithm, ActionTypes.StopFirstAlgorithm], startStopCalculation)
-  yield takeLatest([ActionTypes.StartFirstAlgorithm, ActionTypes.SetFirstAlgorithmResult], startStopTimeout)
+  yield takeLatest([ActionTypes.StartFirstAlgorithm], onStartCalculation);
+  yield takeLatest([ActionTypes.StopFirstAlgorithm], onStopCalculation);
+  yield takeLatest([IpcEvents.ResponseFirstAlgorithm], onFinishCalculation);
+  yield takeLatest([ActionTypes.StartFirstAlgorithm, IpcEvents.ResponseFirstAlgorithm], stopTimeout);
 }

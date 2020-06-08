@@ -1,59 +1,51 @@
 import { ipcRenderer } from 'electron';
-import { call, delay, put, select, takeLatest } from 'redux-saga/effects';
+import { delay, put, select, takeLatest } from 'redux-saga/effects';
 
-import { ActionWithPayload, SecondAlgorithmParams, Point, BrownianMotionResult } from '../../models';
-import { ActionTypes, SetSecondAlgorithmLoading, SetSecondAlgorithmResult, StopSecondAlgorithm, OpenInfoModal } from '../Actions';
+import { IpcEvents, StochasticProcessData } from '../../../models';
+import { ActionWithPayload, SecondAlgorithmParams } from '../../models';
+import { ActionTypes, OpenInfoModal, SetSecondAlgorithmLoading, StopSecondAlgorithm, SetSecondAlgorithmResult } from '../Actions';
 import { RootState } from '../RootReducer';
-import { firstAlgorithmParamsSelector, secondAlgorithmParamsSelector } from '../Selectors';
-import { IpcEvents } from '../../../models';
+import { secondAlgorithmParamsSelector, secondAlgorithmResultSelector } from '../Selectors';
 
 
-function* startStopCalculation(action: ActionWithPayload) {
-  if (action.type === ActionTypes.StopSecondAlgorithm) {
-    yield put(SetSecondAlgorithmLoading(false));
-    ipcRenderer.send(IpcEvents.StopSecondAlgorithm);
-    return;
-  }
-
+function* onStartCalculation(action: ActionWithPayload) {
   yield put(SetSecondAlgorithmLoading(true));
 
   const state: RootState = yield select();
   const params: SecondAlgorithmParams = secondAlgorithmParamsSelector(state);
   const H = +params.HParam;
   const Tetta = +params.TettaParam;
+  const N = +params.numberOfPaths;
 
-  const runCalculationPromise = new Promise((resolve, reject) => {
-    ipcRenderer.once(IpcEvents.ResponseSecondAlgorithm, (event: any, result: BrownianMotionResult | null) => {
-      if (result == null) {
-        reject();
-      }
-      resolve(result);
-    })
-    ipcRenderer.send(IpcEvents.StartSecondAlgorithm, H, Tetta);
-  })
+  yield put(SetSecondAlgorithmResult({
+    paths: [],
+  }));
 
-  try {
-    const result: BrownianMotionResult = yield call(() => runCalculationPromise);
 
-    if (result.fileSize != null && result.fileSize > 20000000) {
-      yield put(OpenInfoModal({
-        title: 'Слишком много данных',
-        description: `График не будет отрисован. Размер данных для отрисовки графика составляет ${(result.fileSize/1000000.0).toFixed(2)} MB.`
-      }));
-    }
+  ipcRenderer.send(IpcEvents.StartSecondAlgorithm, H, Tetta, N);
+}
 
-    yield put(SetSecondAlgorithmResult(result));
-  } catch (e) { }
+function* onFinishCalculation(action: ActionWithPayload) {
+  const state: RootState = yield select();
+
+  const result: StochasticProcessData = secondAlgorithmResultSelector(state);
+
+  yield put(SetSecondAlgorithmResult(action.payload[0]));
 
   yield put(SetSecondAlgorithmLoading(false));
 }
 
+function* onStopCalculation(action: ActionWithPayload) {
+  ipcRenderer.send(IpcEvents.StopSecondAlgorithm);
+  yield put(SetSecondAlgorithmLoading(false));
+}
 
-function* startStopTimeout(action: ActionWithPayload) {
-  if (action.type === ActionTypes.SetSecondAlgorithmResult) {
+function* stopTimeout(action: ActionWithPayload) {
+  if (action.type === IpcEvents.ResponseFirstAlgorithm) {
     yield put(SetSecondAlgorithmLoading(false));
     return;
   }
+
   const state: RootState = yield select();
   const params: SecondAlgorithmParams = secondAlgorithmParamsSelector(state);
 
@@ -72,6 +64,8 @@ function* startStopTimeout(action: ActionWithPayload) {
 }
 
 export function* SecondAlgorithmSagaWatcher() {
-  yield takeLatest([ActionTypes.StartSecondAlgorithm, ActionTypes.StopSecondAlgorithm], startStopCalculation)
-  yield takeLatest([ActionTypes.StartSecondAlgorithm, ActionTypes.SetSecondAlgorithmResult], startStopTimeout)
+  yield takeLatest([ActionTypes.StartSecondAlgorithm], onStartCalculation);
+  yield takeLatest([ActionTypes.StopSecondAlgorithm], onStopCalculation);
+  yield takeLatest([IpcEvents.ResponseSecondAlgorithm], onFinishCalculation);
+  yield takeLatest([ActionTypes.StartSecondAlgorithm, IpcEvents.ResponseSecondAlgorithm], stopTimeout);
 }

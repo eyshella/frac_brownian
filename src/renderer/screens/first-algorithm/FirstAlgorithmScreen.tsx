@@ -1,23 +1,17 @@
 import { Button, CircularProgress, TextField, Tooltip, Typography } from '@material-ui/core';
-import { BrowserWindow, ipcRenderer, remote, SaveDialogReturnValue } from 'electron';
+import { BrowserWindow, remote, SaveDialogReturnValue, ipcRenderer } from 'electron';
 import FileSaver from 'file-saver';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { connect } from 'react-redux';
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
-import { Dispatch } from 'redux';
+import { Dispatch } from 'redux'
+import { LineChart } from 'recharts';
 import * as svgSaver from 'save-svg-as-png';
-
 import styled, { withTheme } from 'styled-components';
-
-import { BrownianMotionResult, FirstAlgorithmParams, IpcEvents } from '../../models';
-import { SetFirstAlgorithmParams, StartFirstAlgorithm, StopFirstAlgorithm } from '../../store/Actions';
+import { FirstAlgorithmParams, StochasticProcessData, IpcEvents } from '../../models';
+import { firstAlgorithmLoadingSelector, firstAlgorithmParamsSelector, firstAlgorithmResultSelector } from '../../store/Selectors';
 import { RootState } from '../../store/RootReducer';
-import {
-  firstAlgorithmLoadingSelector,
-  firstAlgorithmParamsSelector,
-  firstAlgorithmResultSelector,
-} from '../../store/Selectors';
+import { StartFirstAlgorithm, StopFirstAlgorithm, SetFirstAlgorithmParams } from '../..//store/Actions';
+import { connect } from 'react-redux';
 
 const Wrapper = styled.div`
   display:flex;
@@ -35,7 +29,7 @@ const SettingsWrapper = styled.div`
   flex-direction:column;
   align-items:flex-start;
   flex-grow:1;
-  flex-basis:100%;
+  flex-basis:50%;
 `
 
 const SettingWrapper = styled.div`
@@ -49,7 +43,7 @@ const SettingWrapper = styled.div`
 const ResultWrapper = styled.div`
   display:flex;
   flex-direction:column;
-  align-items:flex-start;
+  align-items:center;
   flex-grow:1;
   flex-basis:100%;
   box-sizing:border-box;
@@ -72,9 +66,13 @@ const ActionButton = styled(Button)`
  min-width:100px !important;
 `
 
+const PathsImage = styled.img`
+  width:100%
+`
+
 interface StateFromProps {
   params: FirstAlgorithmParams;
-  result: BrownianMotionResult;
+  result: StochasticProcessData;
   loading: boolean
 }
 
@@ -110,55 +108,24 @@ class FirstAlgorithmScreenInternal extends React.Component<Props> {
   }
 
 
-  public onSaveImage(asPng = false) {
-    if (this.currentChart == null) {
-      return;
-    }
-
-    let chartSVG = (ReactDOM.findDOMNode(this.currentChart) as Element).children![0];
-
-    if (asPng) {
-      svgSaver.svgAsPngUri(chartSVG).then((uri: string) => {
-        try {
-          var byteString = atob(uri.split(',')[1]);
-
-          // separate out the mime component
-          var mimeString = uri.split(',')[0].split(':')[1].split(';')[0]
-
-          // write the bytes of the string to an ArrayBuffer
-          var ab = new ArrayBuffer(byteString.length);
-
-          // create a view into the buffer
-          var ia = new Uint8Array(ab);
-
-          // set the bytes of the buffer to the correct values
-          for (var i = 0; i < byteString.length; i++) {
-            ia[i] = byteString.charCodeAt(i);
-          }
-
-          // write the ArrayBuffer to a blob, and you're done
-          var blob = new Blob([ab], { type: mimeString });
-
-          FileSaver.saveAs(blob, "FirstAlgorithmImage.png");
-        } catch (e) {
-          console.log(e);
-        }
-      })
-      return;
-    }
-
-    let svgURL = new XMLSerializer().serializeToString(chartSVG);
-    let svgBlob = new Blob([svgURL], { type: "image/svg+xml;charset=utf-8" });
-    FileSaver.saveAs(svgBlob, "FirstAlgorithmImage.svg");
+  public onSaveImage() {
+    const win: BrowserWindow = remote.getCurrentWindow();
+    remote.dialog.showSaveDialog(win, {
+      defaultPath: 'image.png'
+    }).then((value: SaveDialogReturnValue) => {
+      if (value != null && !value.canceled && value.filePath != null && this.props.result.image != null) {
+        ipcRenderer.send(IpcEvents.CopyFile, this.props.result.image.filePath, value.filePath)
+      }
+    });
   }
 
   public onSaveData() {
     const win: BrowserWindow = remote.getCurrentWindow();
     remote.dialog.showSaveDialog(win, {
-      defaultPath: 'FirstAlgorithmData.json'
+      defaultPath: 'data.zip'
     }).then((value: SaveDialogReturnValue) => {
-      if (value.filePath != null) {
-        ipcRenderer.send(IpcEvents.CopyFile, this.props.result.filePath, value.filePath)
+      if (value != null && !value.canceled && value.filePath != null && this.props.result.paths && this.props.result.paths.length !== 0) {
+        ipcRenderer.send(IpcEvents.CopyFilesAsZip, this.props.result.paths.map(item => item.filePath), value.filePath)
       }
     });
   }
@@ -225,6 +192,16 @@ class FirstAlgorithmScreenInternal extends React.Component<Props> {
             </Tooltip>
           </SettingWrapper>
           <SettingWrapper>
+            <TextField
+              id="numberOfPaths"
+              variant="outlined"
+              label="Количество траекторий"
+              type={'number'}
+              value={this.props.params.numberOfPaths}
+              onChange={(e) => this.props.setParams({ ...this.props.params, numberOfPaths: e.target.value })}
+            />
+          </SettingWrapper>
+          <SettingWrapper>
             <StyledButton variant="contained" color="primary" onClick={() => this.onSubmit()} disabled={this.props.loading}>
               {this.props.loading ? <CircularProgress size={24} color="secondary" /> : "Рассчитать"}
             </StyledButton>
@@ -237,45 +214,21 @@ class FirstAlgorithmScreenInternal extends React.Component<Props> {
         </SettingsWrapper>
         <ResultWrapper>
           {
-            this.props.result &&
-              this.props.result.x &&
-              this.props.result.y &&
-              this.props.result.x.length > 0 &&
-              this.props.result.x.length <= this.props.result.y.length ?
-              <ResponsiveContainer width="99%" height={600}>
-                <LineChart
-                  height={600}
-                  ref={(chart: LineChart) => this.currentChart = chart}
-                  data={
-                    this.props.result.x.map((item: number, index: number) => ({
-                      x: item.toFixed(2),
-                      y: this.props.result.y![index]
-                    }))
-                  } >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="x" />
-                  <YAxis />
-                  <Line type="monotone" dataKey="y" dot={false} stroke={this.props.theme.palette.secondary.main} />
-                </LineChart>
-              </ResponsiveContainer> :
+            this.props.result.image && this.props.result.image.base64 ?
+              <PathsImage src={`data:image/png;base64,${this.props.result.image.base64}`} /> :
               null
           }
           <ResultActionsWrapper>
             {
-              (this.props.result != null && this.props.result.x != null && this.props.result.x.length !== 0) &&
-              <>
-                <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveImage(false)} disabled={!this.props.result || !this.props.result.x || !this.props.result.x.length}>
-                  Сохранить Svg
-                </ActionButton>
-                <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveImage(true)} disabled={!this.props.result || !this.props.result.filePath}>
-                  Сохранить Png
-                </ActionButton>
-              </>
+              (this.props.result && this.props.result.image && this.props.result.image.filePath) &&
+              <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveImage()} disabled={!this.props.result || !this.props.result.image || !this.props.result.image.filePath}>
+                Сохранить Png
+              </ActionButton>
             }
             {
-              (this.props.result != null && this.props.result.filePath != null && this.props.result.filePath != '') &&
-              <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveData()} disabled={!this.props.result || !this.props.result.filePath}>
-                Сохранить Json
+              (this.props.result && this.props.result.paths && this.props.result.paths.length !== 0) &&
+              <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveData()} disabled={!this.props.result || !this.props.result.paths || this.props.result.paths.length === 0}>
+                Сохранить данные
               </ActionButton>
             }
           </ResultActionsWrapper>

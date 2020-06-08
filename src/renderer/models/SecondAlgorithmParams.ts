@@ -2,6 +2,8 @@ export interface SecondAlgorithmParams {
   TettaParam: string;
   HParam: string;
   timeoutSeconds: string;
+  numberOfPaths: string;
+  point:string;
   //lawParam: SecondAlgorithmLaw;
 }
 

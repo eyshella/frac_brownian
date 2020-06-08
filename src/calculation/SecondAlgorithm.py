@@ -4,6 +4,7 @@ import os
 import json
 import sys
 import time
+import matplotlib.pyplot as plt
 import gc
 
 
@@ -11,16 +12,31 @@ random.seed()
 
 
 def SaveResultToFileAsJSON(x, y):
-    ts =time.time()
-    file_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__))+"/SecondAlgorithm-"+str(ts)+".json")
+    ts = time.time()
+    file_path = os.path.abspath(os.path.dirname(
+        os.path.realpath(__file__))+"/SecondAlgorithm-"+str(ts)+".json")
     directory = os.path.dirname(file_path)
     try:
         os.stat(directory)
     except:
-        os.mkdir(directory)  
+        os.mkdir(directory)
     file = open(file_path, 'w+')
 
-    json.dump({'x': x, 'y':y},file,separators=(',', ':'))
+    json.dump({'x': x, 'y': y}, file, separators=(',', ':'))
+    return file_path
+
+
+def CreateResultChartFile(X, Y):
+    ts = time.time()
+    file_path = os.path.abspath(os.path.dirname(
+        os.path.realpath(__file__))+"/SecondAlgorithm-"+str(ts)+".png")
+    fig, ax = plt.subplots(dpi=600, frameon=False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    for i in range(len(X)):
+        ax.plot(X[i], Y[i],color='#f50057',linewidth=0.3)
+
+    fig.savefig(file_path)
     return file_path
 
 
@@ -118,9 +134,21 @@ def FractionalBrownianMotion(H, tetta, T):
 
 H = float(sys.argv[1])
 tetta = int(sys.argv[2])
+NumberOfPaths = int(sys.argv[3])
 T = 1
 
-x, y = FractionalBrownianMotion(H, tetta, T)
 
-fileName = SaveResultToFileAsJSON(x, y)
-print(json.dumps({'filePath':fileName}))
+X = []
+Y = []
+pathFilesJsons = []
+for i in range(NumberOfPaths):
+    x, y = FractionalBrownianMotion(H, tetta,T)
+    X.append(x)
+    Y.append(y)
+    fileName = SaveResultToFileAsJSON(x, y)
+    pathFilesJsons.append({'filePath': fileName})
+
+imageFileName = CreateResultChartFile(X, Y)
+imageFileJson = {'filePath': imageFileName}
+print(json.dumps({'image': imageFileJson, 'paths':pathFilesJsons, 'params':{}}))
+sys.stdout.flush()

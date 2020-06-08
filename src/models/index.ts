@@ -1,3 +1,5 @@
 export * from './IpcEvents';
 export * from './Point';
-export * from './BrownianMotionResult';
+export * from './StochasticProcessData';
+export * from './FileInfo';
+export * from './Base64FileInfo';

@@ -1,6 +1,6 @@
 import { PythonShell, Options, PythonShellError } from "python-shell";
 import InstallPackages from '!!raw-loader!../../calculation/InstallPackages.py';
-import { ipcMain, dialog } from "electron";
+import { ipcMain, dialog, IpcMainEvent } from "electron";
 import fs from 'fs';
 import { IpcEvents } from "models";
 
@@ -8,16 +8,18 @@ export abstract class BasePythonController {
   constructor(
     private startIpcEvent: string,
     private stopIpcEvent: string,
-    private resultIpcEvent: string,
+    private finishIpcEvent: string,
+    private updateIpcEvent: string,
     private pythonString: string
   ) { }
 
   protected worker?: PythonShell;
   protected firstRun = true;
   private stoped = false;
+  protected event: IpcMainEvent | undefined;
 
   private installPackages = new Promise((resolve, reject) => {
-    PythonShell.runString(InstallPackages, undefined, (err, output) => {
+    PythonShell.runString(InstallPackages, {}, (err, output) => {
       if (err != null) {
         reject(err);
       }
@@ -29,10 +31,11 @@ export abstract class BasePythonController {
     if (this.worker) {
       this.worker.kill();
       this.worker = undefined;
+      this.event = undefined;
     }
   }
 
-  protected async startWorker(event: Electron.IpcMainEvent, ...args: Array<any>) {
+  protected async startWorker(event: any, ...args: Array<any>) {
     this.clearWorker();
 
     if (this.firstRun) {
@@ -47,7 +50,8 @@ export abstract class BasePythonController {
 
     const options: Options = {
       mode: 'text',
-      args: args ? args.map(item => `${item}`) : undefined
+      args: args ? args.map(item => `${item}`) : undefined,
+      pythonOptions: ['-u']
     };
 
     this.worker = PythonShell.runString(this.pythonString, options, (err: PythonShellError, output) => {
@@ -61,13 +65,29 @@ export abstract class BasePythonController {
       } catch (e) {
         this.handleError(e);
       }
-      event.sender.send(this.resultIpcEvent, result);
+
+      if (this.event != null) {
+        this.event.sender.send(this.finishIpcEvent, result);
+      }
+
       this.clearWorker();
+    });
+
+    this.worker.on('message', (message: string) => {
+      let result = null;
+      try {
+        result = this.handlePythonMessage(message);
+      } catch (e) {
+        this.handleError(e);
+      }
+
+      if (this.event != null && result != null) {
+        this.event.sender.send(this.updateIpcEvent, result);
+      }
     });
   }
 
-
-  protected handlePythonResult(output?: Array<string>) {
+  protected handlePythonResult(output?: Array<string>):any {
     if (this.stoped) {
       this.stoped = false;
       return null;
@@ -76,35 +96,15 @@ export abstract class BasePythonController {
       throw new Error('Выходные данные равны null или пусты');
     }
 
-    let parsedOutput = JSON.parse(output[output.length - 1]);
-    if (parsedOutput == null) {
-      throw new Error('Ошибка при десериализации JSON');
+    return output;
+  }
+
+  protected handlePythonMessage(message: string):any {
+    if (this.stoped) {
+      return null;
     }
 
-    if (parsedOutput.filePath != null) {
-      try {
-        const stats = fs.statSync(parsedOutput.filePath)
-        const fileSizeInBytes = stats["size"]
-
-        if (fileSizeInBytes < 20000000) {
-          const fileContent = fs.readFileSync(parsedOutput.filePath, 'utf8');
-          const parsedFile = JSON.parse(fileContent);
-          if (parsedFile == null) {
-            throw new Error('Ошибка при десериализации JSON');
-          }
-          parsedOutput = {
-            ...parsedOutput,
-            ...parsedFile,
-          }
-        }
-
-        parsedOutput.fileSize=fileSizeInBytes;
-      } catch (e) {
-        throw new Error(`Ошибка при чтении JSON файла ${parsedOutput.filePath}: ${e.message} ${e.stacktrace}`);
-      }
-    }
-
-    return parsedOutput;
+    return message;
   }
 
   protected handleError(error: Error) {
@@ -113,11 +113,13 @@ export abstract class BasePythonController {
 
   public Start() {
     ipcMain.on(this.startIpcEvent, async (event: any, ...args) => {
+      this.event = event;
       await this.startWorker(event, ...args)
     });
 
     ipcMain.on(this.stopIpcEvent, async (event: any) => {
       this.stoped = true;
+      this.event = event;
       this.clearWorker();
     });
   }

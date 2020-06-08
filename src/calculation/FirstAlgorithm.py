@@ -5,6 +5,7 @@ import sys
 import os
 import time
 import gc
+import matplotlib.pyplot as plt
 from scipy.integrate import quad
 
 random.seed()
@@ -12,7 +13,8 @@ random.seed()
 
 def SaveResultToFileAsJSON(x, y):
     ts = time.time()
-    file_path =  os.path.abspath(os.path.dirname(os.path.realpath(__file__))+"/FirstAlgorithm-"+str(ts)+".json")
+    file_path = os.path.abspath(os.path.dirname(
+        os.path.realpath(__file__))+"/FirstAlgorithm-"+str(ts)+".json")
     directory = os.path.dirname(file_path)
     try:
         os.stat(directory)
@@ -21,6 +23,20 @@ def SaveResultToFileAsJSON(x, y):
     file = open(file_path, 'w+')
 
     json.dump({'x': x, 'y': y}, file, separators=(',', ':'))
+    return file_path
+
+
+def CreateResultChartFile(X, Y):
+    ts = time.time()
+    file_path = os.path.abspath(os.path.dirname(
+        os.path.realpath(__file__))+"/FirstAlgorithm-"+str(ts)+".png")
+    fig, ax = plt.subplots(dpi=600, frameon=False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    for i in range(len(X)):
+        ax.plot(X[i], Y[i], color='#f50057', linewidth=0.3)
+
+    fig.savefig(file_path)
     return file_path
 
 
@@ -86,12 +102,57 @@ def FractionalBrownianMotion(H, T, m, M):
     return x, y
 
 
+def GetValueInPoint(x, y, point):
+    k = 0
+    while k < len(x) and x[k] < point:
+        k = k+1
+
+    if k == 0:
+        return y[0]
+    return ((x[k]*y[k-1]-x[k-1]*y[k]) + (y[k]-y[k-1])*point)/(x[k]-x[k-1])
+
+
+def Mean(X, Y, point):
+    sum = 0
+    for i in range(len(X)):
+        sum = sum+GetValueInPoint(X[i], Y[i], point)
+    return sum/len(X)
+
+
+def CorrelationCoefficient(X, Y, point):
+    sum = 0
+    for i in range(len(X)):
+        value = GetValueInPoint(X[i], Y[i], point)
+        sum = sum+value*value
+    return sum/len(X)
+
+
+def CalculateProcessParams(X, Y, point):
+    mean = Mean(X, Y, point)
+    correlation = CorrelationCoefficient(X, Y, point)
+    params = {'mean': mean, 'correlation':correlation}
+    return params
+
 H = float(sys.argv[1])
 T = int(sys.argv[2])
 m = int(sys.argv[3])
 M = int(sys.argv[4])
+NumberOfPaths = int(sys.argv[5])
+Point = float(sys.argv[6])
 
-x, y = FractionalBrownianMotion(H, T, m, M)
+X = []
+Y = []
+pathFilesJsons = []
+for i in range(NumberOfPaths):
+    x, y = FractionalBrownianMotion(H, T, m, M)
+    X.append(x)
+    Y.append(y)
+    fileName = SaveResultToFileAsJSON(x, y)
+    pathFilesJsons.append({'filePath': fileName})
 
-fileName = SaveResultToFileAsJSON(x, y)
-print(json.dumps({'filePath': fileName}))
+imageFileName = CreateResultChartFile(X, Y)
+imageFileJson = {'filePath': imageFileName}
+params = CalculateProcessParams(X, Y, Point)
+print(json.dumps({'image': imageFileJson,
+                  'paths': pathFilesJsons, 'params': params}))
+sys.stdout.flush()

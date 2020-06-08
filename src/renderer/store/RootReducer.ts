@@ -1,15 +1,15 @@
-import { FirstAlgorithmParams } from "../models/FirstAlhorithmParams";
+import { FirstAlgorithmParams } from "../models/FirstAlgorithmParams";
 import { Point } from "electron";
 import { Reducer } from "redux";
-import { ActionWithPayload, BrownianMotionResult, SecondAlgorithmParams } from "../models";
+import { ActionWithPayload, StochasticProcessData, SecondAlgorithmParams } from "../models";
 import { ActionTypes } from "./Actions";
 
 export interface RootState {
   firstAlgorithmParams: FirstAlgorithmParams;
-  firstAlgorithmResult: BrownianMotionResult;
+  firstAlgorithmResult: StochasticProcessData;
   firstAlgorithmLoading: boolean;
   secondAlgorithmParams: SecondAlgorithmParams;
-  secondAlgorithmResult: BrownianMotionResult;
+  secondAlgorithmResult: StochasticProcessData;
   secondAlgorithmLoading: boolean;
   isInfoModalOpen: boolean;
   infoModalTitle: string;
@@ -22,22 +22,22 @@ const defaultState: RootState = {
     MParam: '500',
     TParam: '500',
     mParam: '30',
-    timeoutSeconds: '600'
+    numberOfPaths: '1',
+    timeoutSeconds: '600',
+    point:'0.5'
   },
   secondAlgorithmParams: {
     HParam: '0.75',
     TettaParam: '1000',
-    timeoutSeconds: '600'
+    timeoutSeconds: '600',
+    numberOfPaths: '1',
+    point:'0.5'
   },
   firstAlgorithmResult: {
-    x: [],
-    y: [],
-    filePath: ''
+    paths: [],
   },
   secondAlgorithmResult: {
-    x: [],
-    y: [],
-    filePath: ''
+    paths: [],
   },
   firstAlgorithmLoading: false,
   secondAlgorithmLoading: false,
