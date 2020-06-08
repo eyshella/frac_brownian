@@ -35,7 +35,7 @@ const SettingsWrapper = styled.div`
   flex-direction:column;
   align-items:flex-start;
   flex-grow:1;
-  flex-basis:100%;
+  flex-basis:50%;
 `
 
 const SettingWrapper = styled.div`
