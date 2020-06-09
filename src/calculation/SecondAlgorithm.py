@@ -132,9 +132,45 @@ def FractionalBrownianMotion(H, tetta, T):
     return poisson, result
 
 
+def GetValueInPoint(x, y, point):
+    k = 0
+    while k < len(x) and x[k] < point:
+        k = k+1
+
+    if k == 0:
+        return y[0]
+    return ((x[k]*y[k-1]-x[k-1]*y[k]) + (y[k]-y[k-1])*point)/(x[k]-x[k-1])
+
+
+def Mean(X, Y, point):
+    sum = 0
+    for i in range(len(X)):
+        sum = sum+GetValueInPoint(X[i], Y[i], point)
+    return sum/len(X)
+
+
+def CovarianceCoefficient(X, Y, point1, point2, mean1, mean2):
+    sum = 0
+    for i in range(len(X)):
+        value1 = GetValueInPoint(X[i], Y[i], point1)
+        value2 = GetValueInPoint(X[i], Y[i], point2)
+        sum = sum+(value1-mean1)*(value2-mean2)
+    return sum/len(X)
+
+
+def CalculateProcessParams(X, Y, point1, point2):
+    mean1 = Mean(X, Y, point1)
+    mean2 = Mean(X, Y, point2)
+    covariance = CovarianceCoefficient(X, Y, point1, point2, mean1, mean2)
+    params = {'mean1': mean1, 'mean2':mean2, 'covariance':covariance}
+    return params
+
+
 H = float(sys.argv[1])
 tetta = int(sys.argv[2])
 NumberOfPaths = int(sys.argv[3])
+Point1 = float(sys.argv[4])
+Point2 = float(sys.argv[5])
 T = 1
 
 
@@ -150,5 +186,7 @@ for i in range(NumberOfPaths):
 
 imageFileName = CreateResultChartFile(X, Y)
 imageFileJson = {'filePath': imageFileName}
-print(json.dumps({'image': imageFileJson, 'paths':pathFilesJsons, 'params':{}}))
+params = CalculateProcessParams(X, Y, Point1, Point2)
+print(json.dumps({'image': imageFileJson,
+                  'paths': pathFilesJsons, 'params': params}))
 sys.stdout.flush()

@@ -119,18 +119,20 @@ def Mean(X, Y, point):
     return sum/len(X)
 
 
-def CorrelationCoefficient(X, Y, point):
+def CovarianceCoefficient(X, Y, point1, point2, mean1, mean2):
     sum = 0
     for i in range(len(X)):
-        value = GetValueInPoint(X[i], Y[i], point)
-        sum = sum+value*value
+        value1 = GetValueInPoint(X[i], Y[i], point1)
+        value2 = GetValueInPoint(X[i], Y[i], point2)
+        sum = sum+(value1-mean1)*(value2-mean2)
     return sum/len(X)
 
 
-def CalculateProcessParams(X, Y, point):
-    mean = Mean(X, Y, point)
-    correlation = CorrelationCoefficient(X, Y, point)
-    params = {'mean': mean, 'correlation':correlation}
+def CalculateProcessParams(X, Y, point1, point2):
+    mean1 = Mean(X, Y, point1)
+    mean2 = Mean(X, Y, point2)
+    covariance = CovarianceCoefficient(X, Y, point1, point2, mean1, mean2)
+    params = {'mean1': mean1, 'mean2':mean2, 'covariance':covariance}
     return params
 
 H = float(sys.argv[1])
@@ -138,7 +140,8 @@ T = int(sys.argv[2])
 m = int(sys.argv[3])
 M = int(sys.argv[4])
 NumberOfPaths = int(sys.argv[5])
-Point = float(sys.argv[6])
+Point1 = float(sys.argv[6])
+Point2 = float(sys.argv[7])
 
 X = []
 Y = []
@@ -152,7 +155,7 @@ for i in range(NumberOfPaths):
 
 imageFileName = CreateResultChartFile(X, Y)
 imageFileJson = {'filePath': imageFileName}
-params = CalculateProcessParams(X, Y, Point)
+params = CalculateProcessParams(X, Y, Point1, Point2)
 print(json.dumps({'image': imageFileJson,
                   'paths': pathFilesJsons, 'params': params}))
 sys.stdout.flush()

@@ -1,17 +1,26 @@
 import { Button, CircularProgress, TextField, Tooltip, Typography } from '@material-ui/core';
-import { BrowserWindow, remote, SaveDialogReturnValue, ipcRenderer } from 'electron';
-import FileSaver from 'file-saver';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import { BrowserWindow, ipcRenderer, remote, SaveDialogReturnValue } from 'electron';
 import React from 'react';
-import ReactDOM from 'react-dom';
-import { Dispatch } from 'redux'
-import { LineChart } from 'recharts';
-import * as svgSaver from 'save-svg-as-png';
-import styled, { withTheme } from 'styled-components';
-import { FirstAlgorithmParams, StochasticProcessData, IpcEvents } from '../../models';
-import { firstAlgorithmLoadingSelector, firstAlgorithmParamsSelector, firstAlgorithmResultSelector } from '../../store/Selectors';
-import { RootState } from '../../store/RootReducer';
-import { StartFirstAlgorithm, StopFirstAlgorithm, SetFirstAlgorithmParams } from '../..//store/Actions';
 import { connect } from 'react-redux';
+import { LineChart } from 'recharts';
+import { Dispatch } from 'redux';
+import styled, { withTheme } from 'styled-components';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
+
+import { SetFirstAlgorithmParams, StartFirstAlgorithm, StopFirstAlgorithm } from '../..//store/Actions';
+import { FirstAlgorithmParams, IpcEvents, StochasticProcessData } from '../../models';
+import { RootState } from '../../store/RootReducer';
+import {
+  firstAlgorithmLoadingSelector,
+  firstAlgorithmParamsSelector,
+  firstAlgorithmResultSelector,
+} from '../../store/Selectors';
 
 const Wrapper = styled.div`
   display:flex;
@@ -20,7 +29,7 @@ const Wrapper = styled.div`
   flex-direction:row;
   align-items:stretch;
   justify-content:flex-start;
-  padding:50px 0px;
+  padding:0px 0px;
   box-sizing:border-box;
 `
 
@@ -47,15 +56,17 @@ const ResultWrapper = styled.div`
   flex-grow:1;
   flex-basis:100%;
   box-sizing:border-box;
+  justify-content:flex-start;
 `
 
-const ResultActionsWrapper = styled.div`
+const ResultParamsWrapper = styled.div`
   padding:20px 0px;
   display:flex;
   justify-content:space-evenly;
   align-items:center;
   align-self:center;
   width:100%;
+  flex-direction:column;
 `
 
 const StyledButton = styled(Button)`
@@ -63,11 +74,17 @@ const StyledButton = styled(Button)`
 `
 
 const ActionButton = styled(Button)`
+ margin:20px 0px !important;
  min-width:100px !important;
+ align-self:flex-end;
 `
 
 const PathsImage = styled.img`
-  width:100%
+  width:100%;
+`
+
+const StyledTableCell = styled(TableCell)`
+  user-select:all;
 `
 
 interface StateFromProps {
@@ -86,9 +103,13 @@ interface ThemeProps {
   theme: any
 }
 
+interface State {
+  currentResultTab: number
+}
+
 type Props = DispatchFromProps & StateFromProps & ThemeProps
 
-class FirstAlgorithmScreenInternal extends React.Component<Props> {
+class FirstAlgorithmScreenInternal extends React.Component<Props, State> {
   private currentChart: LineChart | undefined;
 
   constructor(props: any) {
@@ -97,6 +118,9 @@ class FirstAlgorithmScreenInternal extends React.Component<Props> {
     this.onStop = this.onStop.bind(this);
     this.onSaveImage = this.onSaveImage.bind(this);
     this.onSaveData = this.onSaveData.bind(this);
+    this.state = {
+      currentResultTab: 0
+    }
   }
 
   public onSubmit() {
@@ -202,6 +226,26 @@ class FirstAlgorithmScreenInternal extends React.Component<Props> {
             />
           </SettingWrapper>
           <SettingWrapper>
+            <TextField
+              id="numberOfPaths"
+              variant="outlined"
+              label="Точка 1"
+              type={'number'}
+              value={this.props.params.point1}
+              onChange={(e) => this.props.setParams({ ...this.props.params, point1: e.target.value })}
+            />
+          </SettingWrapper>
+          <SettingWrapper>
+            <TextField
+              id="numberOfPaths"
+              variant="outlined"
+              label="Точка 2"
+              type={'number'}
+              value={this.props.params.point2}
+              onChange={(e) => this.props.setParams({ ...this.props.params, point2: e.target.value })}
+            />
+          </SettingWrapper>
+          <SettingWrapper>
             <StyledButton variant="contained" color="primary" onClick={() => this.onSubmit()} disabled={this.props.loading}>
               {this.props.loading ? <CircularProgress size={24} color="secondary" /> : "Рассчитать"}
             </StyledButton>
@@ -212,27 +256,65 @@ class FirstAlgorithmScreenInternal extends React.Component<Props> {
             </StyledButton>
           </SettingWrapper>
         </SettingsWrapper>
-        <ResultWrapper>
-          {
-            this.props.result.image && this.props.result.image.base64 ?
-              <PathsImage src={`data:image/png;base64,${this.props.result.image.base64}`} /> :
-              null
-          }
-          <ResultActionsWrapper>
+        {
+          this.props.result.paths.length > 0 &&
+          <ResultWrapper>
+            <Tabs
+              value={this.state.currentResultTab}
+              onChange={(event: React.ChangeEvent<{}>, value: number) => {
+                this.setState({ currentResultTab: value });
+              }}
+              aria-label="simple tabs example"
+            >
+              <Tab label="График" />
+              <Tab label="Характеристики" />
+            </Tabs>
             {
-              (this.props.result && this.props.result.image && this.props.result.image.filePath) &&
-              <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveImage()} disabled={!this.props.result || !this.props.result.image || !this.props.result.image.filePath}>
-                Сохранить Png
-              </ActionButton>
+              this.state.currentResultTab === 0 &&
+              <>
+                {
+                  this.props.result.image && this.props.result.image.base64 ?
+                    <PathsImage src={`data:image/png;base64,${this.props.result.image.base64}`} /> :
+                    null
+                }
+                {
+                  (this.props.result.image && this.props.result.image.filePath) &&
+                  <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveImage()} disabled={!this.props.result.image || !this.props.result.image.filePath}>
+                    Сохранить график
+                    </ActionButton>
+                }
+              </>
             }
+
             {
-              (this.props.result && this.props.result.paths && this.props.result.paths.length !== 0) &&
-              <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveData()} disabled={!this.props.result || !this.props.result.paths || this.props.result.paths.length === 0}>
-                Сохранить данные
-              </ActionButton>
+              this.props.result.params != null && this.state.currentResultTab === 1 &&
+              <ResultParamsWrapper>
+                <Table aria-label="simple table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Мат. ожидание в точке 1</TableCell>
+                      <TableCell>Мат. ожидание в точке 2</TableCell>
+                      <TableCell>Ковариация</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    <TableRow key='1'>
+                      <StyledTableCell>{this.props.result.params.mean1}</StyledTableCell>
+                      <StyledTableCell>{this.props.result.params.mean2}</StyledTableCell>
+                      <StyledTableCell>{this.props.result.params.covariance}</StyledTableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+                {
+                  (this.props.result.paths && this.props.result.paths.length !== 0) &&
+                  <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveData()} disabled={!this.props.result.paths || this.props.result.paths.length === 0}>
+                    Сохранить данные
+                  </ActionButton>
+                }
+              </ResultParamsWrapper>
             }
-          </ResultActionsWrapper>
-        </ResultWrapper>
+          </ResultWrapper>
+        }
       </Wrapper>
     );
   }

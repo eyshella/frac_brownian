@@ -22,16 +22,18 @@ const defaultState: RootState = {
     MParam: '500',
     TParam: '500',
     mParam: '30',
-    numberOfPaths: '1',
-    timeoutSeconds: '600',
-    point:'0.5'
+    numberOfPaths: '2',
+    timeoutSeconds: '300',
+    point1:'0.1',
+    point2:'0.9'
   },
   secondAlgorithmParams: {
     HParam: '0.75',
     TettaParam: '1000',
-    timeoutSeconds: '600',
-    numberOfPaths: '1',
-    point:'0.5'
+    timeoutSeconds: '300',
+    numberOfPaths: '100',
+    point1:'0.1',
+    point2:'0.9'
   },
   firstAlgorithmResult: {
     paths: [],

@@ -23,8 +23,10 @@ function* onStartCalculation(action: ActionWithPayload) {
   const m = +params.mParam;
   const M = +params.MParam;
   const N = +params.numberOfPaths;
-  const point = +params.point;
-  ipcRenderer.send(IpcEvents.StartFirstAlgorithm, H, T, m, M, N,point);
+  const point1 = +params.point1;
+  const point2 = +params.point2;
+
+  ipcRenderer.send(IpcEvents.StartFirstAlgorithm, H, T, m, M, N,point1, point2);
 }
 
 function* onFinishCalculation(action: ActionWithPayload) {
