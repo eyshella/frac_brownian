@@ -9,3 +9,4 @@ def import_or_install(package):
 
 import_or_install('scipy')
 import_or_install('matplotlib')
+import_or_install('numpy')

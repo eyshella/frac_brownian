@@ -132,13 +132,13 @@ class FirstAlgorithmScreenInternal extends React.Component<Props, State> {
   }
 
 
-  public onSaveImage() {
+  public onSaveImage(path: string, defaultName: string = 'image.png') {
     const win: BrowserWindow = remote.getCurrentWindow();
     remote.dialog.showSaveDialog(win, {
-      defaultPath: 'image.png'
+      defaultPath: defaultName
     }).then((value: SaveDialogReturnValue) => {
       if (value != null && !value.canceled && value.filePath != null && this.props.result.image != null) {
-        ipcRenderer.send(IpcEvents.CopyFile, this.props.result.image.filePath, value.filePath)
+        ipcRenderer.send(IpcEvents.CopyFile, path, value.filePath)
       }
     });
   }
@@ -227,22 +227,12 @@ class FirstAlgorithmScreenInternal extends React.Component<Props, State> {
           </SettingWrapper>
           <SettingWrapper>
             <TextField
-              id="numberOfPaths"
+              id="ParamsT"
               variant="outlined"
-              label="Точка 1"
+              label="Разбиение параметров"
               type={'number'}
-              value={this.props.params.point1}
-              onChange={(e) => this.props.setParams({ ...this.props.params, point1: e.target.value })}
-            />
-          </SettingWrapper>
-          <SettingWrapper>
-            <TextField
-              id="numberOfPaths"
-              variant="outlined"
-              label="Точка 2"
-              type={'number'}
-              value={this.props.params.point2}
-              onChange={(e) => this.props.setParams({ ...this.props.params, point2: e.target.value })}
+              value={this.props.params.ParamsT}
+              onChange={(e) => this.props.setParams({ ...this.props.params, ParamsT: e.target.value })}
             />
           </SettingWrapper>
           <SettingWrapper>
@@ -266,8 +256,9 @@ class FirstAlgorithmScreenInternal extends React.Component<Props, State> {
               }}
               aria-label="simple tabs example"
             >
-              <Tab label="График" />
-              <Tab label="Характеристики" />
+              <Tab label="Траектории" />
+              <Tab label="Ковариация" />
+              <Tab label="Среднее" />
             </Tabs>
             {
               this.state.currentResultTab === 0 &&
@@ -279,9 +270,15 @@ class FirstAlgorithmScreenInternal extends React.Component<Props, State> {
                 }
                 {
                   (this.props.result.image && this.props.result.image.filePath) &&
-                  <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveImage()} disabled={!this.props.result.image || !this.props.result.image.filePath}>
+                  <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveImage(this.props.result.image!.filePath)} disabled={!this.props.result.image || !this.props.result.image.filePath}>
                     Сохранить график
-                    </ActionButton>
+                  </ActionButton>
+                }
+                {
+                  (this.props.result.paths && this.props.result.paths.length !== 0) &&
+                  <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveData()} disabled={!this.props.result.paths || this.props.result.paths.length === 0}>
+                    Сохранить данные
+                  </ActionButton>
                 }
               </>
             }
@@ -289,27 +286,32 @@ class FirstAlgorithmScreenInternal extends React.Component<Props, State> {
             {
               this.props.result.params != null && this.state.currentResultTab === 1 &&
               <ResultParamsWrapper>
-                <Table aria-label="simple table">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Мат. ожидание в точке 1</TableCell>
-                      <TableCell>Мат. ожидание в точке 2</TableCell>
-                      <TableCell>Ковариация</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    <TableRow key='1'>
-                      <StyledTableCell>{this.props.result.params.mean1}</StyledTableCell>
-                      <StyledTableCell>{this.props.result.params.mean2}</StyledTableCell>
-                      <StyledTableCell>{this.props.result.params.covariance}</StyledTableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
                 {
-                  (this.props.result.paths && this.props.result.paths.length !== 0) &&
-                  <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveData()} disabled={!this.props.result.paths || this.props.result.paths.length === 0}>
-                    Сохранить данные
-                  </ActionButton>
+                  this.props.result.params && this.props.result.params.covariance && this.props.result.params.covariance.base64 ?
+                    <PathsImage src={`data:image/png;base64,${this.props.result.params.covariance.base64}`} /> :
+                    null
+                }
+                {
+                  (this.props.result.params && this.props.result.params.covariance && this.props.result.params.covariance.filePath) &&
+                  <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveImage(this.props.result.params!.covariance.filePath, 'covariance.png')} disabled={!this.props.result.paths || this.props.result.paths.length === 0}>
+                    Сохранить ковариацию
+                </ActionButton>
+                }
+              </ResultParamsWrapper>
+            }
+            {
+              this.props.result.params != null && this.state.currentResultTab === 2 &&
+              <ResultParamsWrapper>
+                {
+                  this.props.result.params && this.props.result.params.mean && this.props.result.params.mean.base64 ?
+                    <PathsImage src={`data:image/png;base64,${this.props.result.params.mean.base64}`} /> :
+                    null
+                }
+                {
+                  (this.props.result.params && this.props.result.params.mean && this.props.result.params.mean.base64) &&
+                  <ActionButton variant="outlined" color="primary" onClick={() => this.onSaveImage(this.props.result.params!.mean.filePath, 'mean.png')} disabled={!this.props.result.paths || this.props.result.paths.length === 0}>
+                    Сохранить среднее
+                </ActionButton>
                 }
               </ResultParamsWrapper>
             }

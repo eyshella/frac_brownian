@@ -6,6 +6,8 @@ import os
 import time
 import gc
 import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import cm
 from scipy.integrate import quad
 
 random.seed()
@@ -35,6 +37,21 @@ def CreateResultChartFile(X, Y):
     ax.spines['right'].set_visible(False)
     for i in range(len(X)):
         ax.plot(X[i], Y[i], color='#f50057', linewidth=0.3)
+
+    fig.savefig(file_path)
+    return file_path
+
+
+def CreateResult3dChartFile(x, y, z):
+    ts = time.time()
+    file_path = os.path.abspath(os.path.dirname(
+        os.path.realpath(__file__))+"/FirstAlgorithm-"+str(ts)+".png")
+    fig = plt.figure(dpi=600)
+    ax = fig.gca(projection='3d')
+    X, Y = np.meshgrid(x, y)
+
+    surf = ax.plot_surface(X,Y,np.array(z), cmap=cm.coolwarm,linewidth=0, antialiased=False)
+    fig.colorbar(surf, shrink=0.5, aspect=5)
 
     fig.savefig(file_path)
     return file_path
@@ -109,6 +126,9 @@ def GetValueInPoint(x, y, point):
 
     if k == 0:
         return y[0]
+    if k == len(x):
+        return y[len(x)-1]
+
     return ((x[k]*y[k-1]-x[k-1]*y[k]) + (y[k]-y[k-1])*point)/(x[k]-x[k-1])
 
 
@@ -128,20 +148,35 @@ def CovarianceCoefficient(X, Y, point1, point2, mean1, mean2):
     return sum/len(X)
 
 
-def CalculateProcessParams(X, Y, point1, point2):
-    mean1 = Mean(X, Y, point1)
-    mean2 = Mean(X, Y, point2)
-    covariance = CovarianceCoefficient(X, Y, point1, point2, mean1, mean2)
-    params = {'mean1': mean1, 'mean2':mean2, 'covariance':covariance}
+def CalculateProcessParams(X, Y, ParamsT):
+    mean = []
+    covariance = []
+    x = []
+    for i in range(ParamsT+1):
+        point = i/ParamsT
+        x.append(point)
+        mean.append(Mean(X, Y, point))
+
+    for i in range(ParamsT+1):
+        iconvariance = []
+        for j in range(ParamsT + 1):
+            point1 = i/ParamsT
+            point2 = j/ParamsT
+            iconvariance.append(CovarianceCoefficient(X,Y,point1,point2,mean[i],mean[j]))
+        covariance.append(iconvariance)
+
+    meanImageFileName = CreateResultChartFile([x], [mean])
+    covImageFileName = CreateResult3dChartFile(x, x, covariance)
+    params = {'mean': {'filePath': meanImageFileName}, 'covariance': {'filePath': covImageFileName}}
     return params
+
 
 H = float(sys.argv[1])
 T = int(sys.argv[2])
 m = int(sys.argv[3])
 M = int(sys.argv[4])
 NumberOfPaths = int(sys.argv[5])
-Point1 = float(sys.argv[6])
-Point2 = float(sys.argv[7])
+ParamsT = int(sys.argv[6])
 
 X = []
 Y = []
@@ -155,7 +190,7 @@ for i in range(NumberOfPaths):
 
 imageFileName = CreateResultChartFile(X, Y)
 imageFileJson = {'filePath': imageFileName}
-params = CalculateProcessParams(X, Y, Point1, Point2)
+params = CalculateProcessParams(X, Y, ParamsT)
 print(json.dumps({'image': imageFileJson,
                   'paths': pathFilesJsons, 'params': params}))
 sys.stdout.flush()

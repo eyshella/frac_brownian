@@ -16,15 +16,14 @@ function* onStartCalculation(action: ActionWithPayload) {
   const H = +params.HParam;
   const Tetta = +params.TettaParam;
   const N = +params.numberOfPaths;
-  const point1 = +params.point1;
-  const point2 = +params.point2;
+  const ParamT = +params.ParamsT;
 
   yield put(SetSecondAlgorithmResult({
     paths: [],
   }));
 
 
-  ipcRenderer.send(IpcEvents.StartSecondAlgorithm, H, Tetta, N, point1, point2);
+  ipcRenderer.send(IpcEvents.StartSecondAlgorithm, H, Tetta, N,ParamT);
 }
 
 function* onFinishCalculation(action: ActionWithPayload) {

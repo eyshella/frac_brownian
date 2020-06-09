@@ -3,8 +3,7 @@ export interface SecondAlgorithmParams {
   HParam: string;
   timeoutSeconds: string;
   numberOfPaths: string;
-  point1:string;
-  point2:string;
+  ParamsT:string;
   //lawParam: SecondAlgorithmLaw;
 }
 

@@ -5,6 +5,5 @@ export interface FirstAlgorithmParams {
   HParam: string;
   numberOfPaths: string;
   timeoutSeconds: string;
-  point1:string;
-  point2:string;
+  ParamsT:string;
 }

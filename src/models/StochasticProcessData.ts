@@ -10,7 +10,6 @@ export interface StochasticProcessData {
 
 
 export interface StochasticProcessCalculatedParams {
-  mean1: number;
-  mean2: number;
-  covariance: number;
+  mean: Base64FileInfo;
+  covariance: Base64FileInfo;
 }

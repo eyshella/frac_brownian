@@ -5,6 +5,8 @@ import json
 import sys
 import time
 import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import cm
 import gc
 
 
@@ -39,6 +41,19 @@ def CreateResultChartFile(X, Y):
     fig.savefig(file_path)
     return file_path
 
+def CreateResult3dChartFile(x, y, z):
+    ts = time.time()
+    file_path = os.path.abspath(os.path.dirname(
+        os.path.realpath(__file__))+"/SecondAlgorithm-"+str(ts)+".png")
+    fig = plt.figure(dpi=600)
+    ax = fig.gca(projection='3d')
+    X, Y = np.meshgrid(x, y)
+
+    surf = ax.plot_surface(X,Y,np.array(z), cmap=cm.coolwarm,linewidth=0, antialiased=False)
+    fig.colorbar(surf, shrink=0.5, aspect=5)
+
+    fig.savefig(file_path)
+    return file_path
 
 def StandartNormal():
     u = 0
@@ -158,19 +173,33 @@ def CovarianceCoefficient(X, Y, point1, point2, mean1, mean2):
     return sum/len(X)
 
 
-def CalculateProcessParams(X, Y, point1, point2):
-    mean1 = Mean(X, Y, point1)
-    mean2 = Mean(X, Y, point2)
-    covariance = CovarianceCoefficient(X, Y, point1, point2, mean1, mean2)
-    params = {'mean1': mean1, 'mean2':mean2, 'covariance':covariance}
+def CalculateProcessParams(X, Y, ParamsT):
+    mean = []
+    covariance = []
+    x = []
+    for i in range(ParamsT+1):
+        point = i/ParamsT
+        x.append(point)
+        mean.append(Mean(X, Y, point))
+
+    for i in range(ParamsT+1):
+        iconvariance = []
+        for j in range(ParamsT + 1):
+            point1 = i/ParamsT
+            point2 = j/ParamsT
+            iconvariance.append(CovarianceCoefficient(X,Y,point1,point2,mean[i],mean[j]))
+        covariance.append(iconvariance)
+
+    meanImageFileName = CreateResultChartFile([x], [mean])
+    covImageFileName = CreateResult3dChartFile(x, x, covariance)
+    params = {'mean': {'filePath': meanImageFileName}, 'covariance': {'filePath': covImageFileName}}
     return params
 
 
 H = float(sys.argv[1])
 tetta = int(sys.argv[2])
 NumberOfPaths = int(sys.argv[3])
-Point1 = float(sys.argv[4])
-Point2 = float(sys.argv[5])
+ParamsT = int(sys.argv[4])
 T = 1
 
 
@@ -186,7 +215,7 @@ for i in range(NumberOfPaths):
 
 imageFileName = CreateResultChartFile(X, Y)
 imageFileJson = {'filePath': imageFileName}
-params = CalculateProcessParams(X, Y, Point1, Point2)
+params = CalculateProcessParams(X, Y, ParamsT)
 print(json.dumps({'image': imageFileJson,
                   'paths': pathFilesJsons, 'params': params}))
 sys.stdout.flush()

@@ -19,21 +19,19 @@ export interface RootState {
 const defaultState: RootState = {
   firstAlgorithmParams: {
     HParam: '0.5',
-    MParam: '500',
-    TParam: '500',
-    mParam: '30',
-    numberOfPaths: '2',
+    MParam: '250',
+    TParam: '250',
+    mParam: '15',
+    numberOfPaths: '100',
     timeoutSeconds: '300',
-    point1:'0.1',
-    point2:'0.9'
+    ParamsT:'50'
   },
   secondAlgorithmParams: {
     HParam: '0.75',
     TettaParam: '1000',
     timeoutSeconds: '300',
     numberOfPaths: '100',
-    point1:'0.1',
-    point2:'0.9'
+    ParamsT:'50',
   },
   firstAlgorithmResult: {
     paths: [],
