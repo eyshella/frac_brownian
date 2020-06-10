@@ -3,3 +3,7 @@ node_modules/**/*
 dist/**/*
 package-lock.json
 output/**/*
+src/paper/**/*.pdf
+src/paper/**/*.gz
+src/paper/**/*.log
+src/paper/**/*.aux
